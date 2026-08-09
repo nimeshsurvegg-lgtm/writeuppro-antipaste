@@ -206,9 +206,8 @@
             .split-view { flex-direction: column; }
             .split-side { width: 100%; position: static; margin-top: 1rem; }
             
-            /* Float Controls */
-            .zoom-controls { bottom: 15px; right: 15px; }
-            .zoom-controls button { width: 38px; height: 38px; font-size: 1rem; }
+            /* Float Controls Fix - Hide them fully on mobile so they don't overlap inputs */
+            .zoom-controls { display: none !important; }
             
             .toast-container { left: 10px; bottom: 10px; right: 10px; }
             .toast { min-width: 0; width: 100%; box-sizing: border-box; }
@@ -897,10 +896,13 @@
                 const y = document.getElementById('stu-year').value, b = document.getElementById('stu-branch').value, s = document.getElementById('stu-sem').value;
                 if(!y || !b || !s) return;
                 const data = curriculum[y];
-                if(data && data.semesters[s] && data.semesters[s].electives.length > 0) {
+                // Added strict safety checks here to ensure we don't crash on invalid semester indices
+                if(data && data.semesters && data.semesters[s] && data.semesters[s].electives && data.semesters[s].electives.length > 0) {
                     document.getElementById('open-elective-container').classList.remove('hidden');
                     document.getElementById('stu-elective').innerHTML = '<option value="">Select Open Elective</option>' + data.semesters[s].electives.map(e => `<option value="${e}">${e}</option>`).join('');
-                } else document.getElementById('open-elective-container').classList.add('hidden');
+                } else {
+                    document.getElementById('open-elective-container').classList.add('hidden');
+                }
             },
             
             submitStudentProfile() {
@@ -955,9 +957,22 @@
                 }
                 document.getElementById('stu-avg-container').innerHTML = avgHTML;
 
-                const data = curriculum[profile.year].semesters[profile.sem];
-                let subjects = [...data.subjects]; if(profile.elective) subjects.push(profile.elective);
-                document.getElementById('doc-subject').innerHTML = subjects.map(s => `<option value="${s}">${s}</option>`).join('');
+                // Robust Curriculum Parsing Fix 
+                // Prevents JavaScript crash if user's combination of Year/Sem isn't populated yet.
+                let subjects = ["General Engineering Subject", "Project / Lab Work"]; // Generic Fallback
+                try {
+                    if (curriculum[profile.year] && curriculum[profile.year].semesters && curriculum[profile.year].semesters[profile.sem]) {
+                        const data = curriculum[profile.year].semesters[profile.sem];
+                        if (data.subjects) subjects = [...data.subjects];
+                    }
+                } catch(e) { console.warn("Curriculum fallback engaged."); }
+                
+                if(profile.elective) subjects.push(profile.elective);
+                
+                const subjectSelect = document.getElementById('doc-subject');
+                if(subjectSelect) {
+                    subjectSelect.innerHTML = subjects.map(s => `<option value="${s}">${s}</option>`).join('');
+                }
 
                 let myDocs = this.state.docs.filter(d => d.studentId === profile.id);
                 if(search) myDocs = myDocs.filter(d => d.title.toLowerCase().includes(search) || d.subject.toLowerCase().includes(search));
@@ -982,7 +997,15 @@
             },
 
             autoFillSubjectCode() {
-                const sub = document.getElementById('doc-subject').value;
+                const subSelect = document.getElementById('doc-subject');
+                const sub = subSelect ? subSelect.value : '';
+                
+                if (!sub) {
+                    document.getElementById('doc-subject-code').value = 'SYS-00X';
+                    this.updateCoverPageUI();
+                    return;
+                }
+                
                 let mappedCode = subjectCodeMap[sub];
                 if(!mappedCode) {
                     let acronym = sub.split(/\s+/).map(w => w[0] ? w[0].toUpperCase() : '').join('').substring(0, 3);
@@ -1002,7 +1025,16 @@
 
                 if(docId) {
                     this.currentEditId = docId; const doc = this.state.docs.find(d => d.id === docId);
-                    document.getElementById('doc-title').value = doc.title; document.getElementById('doc-subject').value = doc.subject;
+                    document.getElementById('doc-title').value = doc.title; 
+                    
+                    // Automatically append the subject to the select options if it's an older doc
+                    // and not strictly found in the current populated curriculum dropdown.
+                    let subSelect = document.getElementById('doc-subject');
+                    if (doc.subject && ![...subSelect.options].some(o => o.value === doc.subject)) {
+                        subSelect.insertAdjacentHTML('beforeend', `<option value="${doc.subject}">${doc.subject}</option>`);
+                    }
+                    subSelect.value = doc.subject;
+                    
                     document.getElementById('doc-type').value = doc.type; document.getElementById('doc-subject-code').value = doc.subCode || '';
                     document.getElementById('doc-number').value = doc.docNum || ''; 
                     document.getElementById('doc-date').value = doc.submissionDate ? "Submitted: " + doc.submissionDate : "Draft (Unsubmitted)";
@@ -1392,7 +1424,7 @@ public class ApplicationCore {
                 const rem = document.getElementById('grade-remarks').value;
                 const max = doc.type === 'Assignment' ? 10 : 15;
                 
-                if(mks === "" || mks < 0 || mks > max) return showToast("Enter valid scores in the cover page rubric table.", "error");
+                if(mks === "" || mks < 0 || mks > max) return showToast("Enter valid scores in the cover page", "error");
                 
                 doc.marks = mks; 
                 doc.scoreK = document.getElementById('rub-k')?.value || 0;
