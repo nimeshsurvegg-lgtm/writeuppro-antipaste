@@ -59,3 +59,22 @@ WriteUp-Pro/
 ├── README.md        # Documentation
 ├── .gitignore       # Git configurations
 └── LICENSE          # MIT License
+```
+
+## 🛠️ Setup & Deployment
+Because this project utilizes the native browser LocalStorage API for its database, there is zero server setup required.
+
+Clone the Repository:
+
+```Bash
+git clone [https://github.com/yourusername/writeup-pro.git](https://github.com/yourusername/writeup-pro.git)
+```
+
+Run Locally:
+Simply double-click the index.html file to open it in any modern web browser (Chrome, Edge, Firefox, Safari).
+
+Deploy Live:
+You can deploy this immediately using GitHub Pages, Vercel, or Netlify. Since it has no backend dependencies, it works instantly.
+
+## 🖨️ PDF Generation
+WriteUp Pro includes deeply customized @media print CSS. When a student or faculty clicks Download PDF, the browser's native print dialog opens, perfectly stripping away the UI, headers, and toolbars, leaving only an A4-perfect academic document.
