@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WriteUp Pro - Smart Academic Workspace</title>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+    <div class="toast-container" id="toast-container"></div>
+
+    <header class="no-print" id="main-header">
+        <h2>📝 WriteUp <span>Pro</span></h2>
+        <div style="display: flex; gap: 1rem; align-items: center;">
+            <button class="jury-badge-btn" onclick="app.openJuryGuide()">🎯 Jury Testing Instructions</button>
+            <button class="icon-btn outline" onclick="app.toggleDarkMode()" title="Toggle Dark/Light Mode">🌙</button>
+            <div id="user-info" class="hidden" style="display: flex; align-items: center; gap: 1rem;">
+                <div class="avatar" id="user-avatar">U</div>
+                <div>
+                    <div style="font-weight: 700; font-size: 0.9rem;" id="welcome-text">Name</div>
+                    <div style="font-size: 0.75rem; color: var(--text-light);" id="role-text">Role</div>
+                </div>
+                <button onclick="app.logout()" class="danger outline" style="padding: 0.4rem 0.85rem; height: auto;">Log Out</button>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- LOGIN VIEW -->
+        <div id="login-view" style="max-width: 440px; margin: 4rem auto;" class="card">
+            <div style="text-align: center; margin-bottom: 1.5rem;">
+                <div style="display: inline-flex; align-items: center; justify-content: center; width: 56px; height: 56px; background: var(--primary-gradient); color: white; border-radius: 16px; font-size: 1.5rem; margin-bottom: 1rem; box-shadow: var(--shadow-lg);">📝</div>
+                <h3 style="border:none; margin:0; font-size: 1.5rem;">Secure Portal Login</h3>
+                <p style="color: var(--text-light); margin-top: 0.4rem; font-size: 0.9rem;">Authenticate as student, faculty, or administrator</p>
+            </div>
+            
+            <input type="text" id="username" placeholder="Username (student / faculty / admin)">
+            <input type="password" id="password" placeholder="Password (password)">
+            <button onclick="app.login()" style="width: 100%; margin-top: 1.25rem; padding: 0.85rem;">Authenticate Session</button>
+            
+            <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border); text-align: center;">
+                <span style="font-size: 0.8rem; color: var(--text-light);">Jury Quick Switch:</span>
+                <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
+                    <button class="outline" style="flex:1; font-size:0.75rem; padding:0.4rem;" onclick="app.quickLogin('student')">Student</button>
+                    <button class="outline" style="flex:1; font-size:0.75rem; padding:0.4rem;" onclick="app.quickLogin('admin')">Admin</button>
+                    <button class="outline" style="flex:1; font-size:0.75rem; padding:0.4rem;" onclick="app.quickLogin('faculty')">Faculty</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ADMIN VIEW -->
+        <div id="admin-view" class="hidden">
+            <div class="flex-between" style="margin-bottom: 1.25rem;">
+                <div>
+                    <h3 style="border:none; margin:0;">System Control & Audit Ledger</h3>
+                    <p style="color:var(--text-light); margin:0.25rem 0 0 0; font-size:0.9rem;">Manage registrations, classroom approvals, security alerts, and system analytics.</p>
+                </div>
+                <div style="display: flex; gap: 1rem;">
+                    <select id="admin-sort" style="width: 220px; margin: 0;" onchange="app.renderAdmin()">
+                        <option value="status">Sort Students: Status</option>
+                        <option value="name">Sort Students: Name</option>
+                        <option value="roll">Sort Students: Roll No</option>
+                    </select>
+                    <button onclick="app.exportCSV()" class="success">📥 Export Grading Ledger (CSV)</button>
+                </div>
+            </div>
+            
+            <div class="grid-4" style="margin-bottom: 2rem;">
+                <div class="card" style="padding:1.25rem; text-align:center;"><h4 style="margin:0;color:var(--text-light); font-size:0.8rem; text-transform:uppercase; letter-spacing:0.05em;">Total Profiles</h4><h2 id="stat-stu" style="margin:8px 0 0;color:var(--primary); font-size:2rem;">0</h2></div>
+                <div class="card" style="padding:1.25rem; text-align:center;"><h4 style="margin:0;color:var(--text-light); font-size:0.8rem; text-transform:uppercase; letter-spacing:0.05em;">Submitted Docs</h4><h2 id="stat-sub" style="margin:8px 0 0;color:var(--primary); font-size:2rem;">0</h2></div>
+                <div class="card" style="padding:1.25rem; text-align:center;"><h4 style="margin:0;color:var(--text-light); font-size:0.8rem; text-transform:uppercase; letter-spacing:0.05em;">Graded Docs</h4><h2 id="stat-grad" style="margin:8px 0 0;color:var(--primary); font-size:2rem;">0</h2></div>
+                <div class="card" style="padding:1.25rem; text-align:center;"><h4 style="margin:0;color:var(--text-light); font-size:0.8rem; text-transform:uppercase; letter-spacing:0.05em;">Security Flags</h4><h2 id="stat-cheat" style="margin:8px 0 0;color:var(--danger); font-size:2rem;">0</h2></div>
+            </div>
+            
+            <div id="admin-folders-container"></div>
+        </div>
+
+        <!-- STUDENT VIEW -->
+        <div id="student-view" class="hidden">
+            <!-- Setup Form -->
+            <div id="student-setup" class="card hidden" style="max-width: 800px; margin: 0 auto;">
+                
+                <div id="rejection-alert" class="hidden" style="background: rgba(239, 68, 68, 0.08); color: var(--danger); padding: 1.25rem; border-radius: var(--radius-md); margin-bottom: 1.5rem; border: 1px solid rgba(239, 68, 68, 0.3);">
+                    <strong style="display:block; margin-bottom: 4px; font-size: 1rem;">⚠️ Registration Reverted by Administrator</strong>
+                    <span id="rejection-reason" style="font-size: 0.9rem;"></span>
+                </div>
+
+                <h3>Academic Profile Setup</h3>
+                <p style="color:var(--text-light); font-size:0.9rem; margin-bottom:1.5rem;">Fill out your academic credentials to enable full workspace authoring.</p>
+                <div class="grid-2">
+                    <input type="text" id="stu-name" placeholder="Full Name (e.g. Demo Student)">
+                    <input type="text" id="stu-roll" placeholder="Roll Number (e.g. 10)">
+                    <select id="stu-year" onchange="app.loadCurriculumDropdowns()">
+                        <option value="">Select Year</option><option value="FE">First Year (FE)</option><option value="SE">Second Year (SE)</option><option value="TE">Third Year (TE)</option><option value="BE">Fourth Year (BE)</option>
+                    </select>
+                    <select id="stu-branch" onchange="app.loadCurriculumDropdowns()">
+                        <option value="">Select Branch</option><option value="ASH">Applied Science & Humanities</option><option value="CE">Computer Engineering</option><option value="IT">Information Technology</option>
+                    </select>
+                    <select id="stu-sem" onchange="app.loadCurriculumDropdowns()">
+                        <option value="">Select Semester</option><option value="1">Sem 1</option><option value="2">Sem 2</option><option value="3">Sem 3</option><option value="4">Sem 4</option><option value="5">Sem 5</option><option value="6">Sem 6</option><option value="7">Sem 7</option><option value="8">Sem 8</option>
+                    </select>
+                    <select id="stu-div"><option value="">Select Division</option><option value="A">Div A</option><option value="B">Div B</option></select>
+                </div>
+                <div id="open-elective-container" class="hidden" style="margin-top: 1rem;"><select id="stu-elective"></select></div>
+                <button onclick="app.submitStudentProfile()" style="margin-top: 1.5rem; width:100%;">Submit Profile for Admin Verification</button>
+            </div>
+
+            <!-- Blocked State -->
+            <div id="student-blocked" class="card hidden" style="border-color: var(--danger); text-align: center; padding: 4rem;">
+                <h2 style="color: var(--danger); margin-top:0;">Account Access Suspended</h2>
+                <p style="color:var(--text-light);">Your workspace has been locked by the Administrator. Please contact your faculty coordinator or administrator for access restoration.</p>
+            </div>
+
+            <!-- Dashboard -->
+            <div id="student-dashboard" class="hidden">
+                <!-- Verified Profile Summary Card -->
+                <div class="card" style="padding: 1.25rem 1.75rem; margin-bottom: 1.5rem; background: var(--primary-gradient); color: white; border:none;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <h4 style="margin: 0; color: rgba(255,255,255,0.85); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em;">Verified Academic Profile</h4>
+                            <p style="margin: 4px 0 0 0; font-weight: 600; font-size: 1.15rem;" id="stu-profile-summary"></p>
+                        </div>
+                        <div style="text-align: right;">
+                            <span style="background: rgba(255,255,255,0.2); padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; border: 1px solid rgba(255,255,255,0.3);">APPROVED</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid-4" style="margin-bottom: 2rem; gap:1.5rem;">
+                    <div class="card" style="padding: 1.5rem; grid-column: span 2; display:flex; flex-direction:column; justify-content:center; margin-bottom: 0;">
+                        <h3 style="border:none; margin:0; font-size:1.8rem;">Document Workspace</h3>
+                        <p style="color:var(--text-light); margin-top:5px; font-size:0.95rem;">Author assignments/experiments, manage drafts, and track evaluation scores.</p>
+                    </div>
+                    
+                    <div class="card" id="stu-avg-container" style="padding: 1.25rem; grid-column: span 2; max-height: 250px; overflow-y: auto; margin-bottom: 0; background: var(--surface);">
+                        <!-- Average Breakdown Injected Here -->
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="filter-bar">
+                        <select id="student-sort" style="flex: 1; margin:0;" onchange="app.renderStudentDashboard()">
+                            <option value="date_desc">Sort: Newest First</option>
+                            <option value="date_asc">Sort: Oldest First</option>
+                            <option value="status">Sort: Status</option>
+                            <option value="subject">Sort: Subject</option>
+                        </select>
+                        <input type="text" id="stu-search" placeholder="🔍 Search documents by title/subject..." oninput="app.renderStudentDashboard()" style="flex: 2; margin:0;">
+                        <button onclick="app.openEditor(null)" class="success" style="flex: 1; margin: 0;">+ Create Document</button>
+                    </div>
+                    <div id="student-docs-list"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- FACULTY -->
+        <div id="faculty-view" class="hidden">
+            <div id="faculty-dashboard">
+                <div class="flex-between" style="margin-bottom: 1.25rem;">
+                    <div>
+                        <h3 style="border:none; margin:0;">Faculty Evaluation Portal</h3>
+                        <p style="color:var(--text-light); margin:0.25rem 0 0 0; font-size:0.9rem;">Review submitted student assignments, execute rubric calculations, and apply digital evaluation stamps.</p>
+                    </div>
+                    <div style="display: flex; gap: 1rem;">
+                        <input type="text" id="fac-search" placeholder="🔍 Search student name..." oninput="app.renderFaculty()" style="width: 240px; margin: 0;">
+                        <select id="faculty-sort" style="width: 220px; margin: 0;" onchange="app.renderFaculty()">
+                            <option value="pending_first">Sort: Pending First</option>
+                            <option value="graded_first">Sort: Graded First</option>
+                            <option value="name">Sort: Student Name</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="faculty-folders-container"></div>
+            </div>
+            
+            <div id="faculty-grade-view" class="hidden split-view">
+                <div class="split-main">
+                    <button class="outline no-print" onclick="app.closeFacultyEditor()" style="margin-bottom: 1rem; width: auto;">← Back to Submissions List</button>
+                    <div class="a4-container"><div class="a4-page" id="read-only-doc"></div></div>
+                </div>
+                <div class="split-side no-print">
+                    <h3 style="border-bottom:none; margin:0;">Evaluation Panel</h3>
+                    <hr style="border: 0; border-top: 1px solid var(--border); margin: 1rem 0;">
+                    
+                    <div id="plag-badge" class="plagiarism-badge">Authenticity Check: Pending...</div>
+
+                    <p style="margin: 0.5rem 0; font-size:0.9rem;"><strong>Student:</strong> <span id="grade-stu-name"></span></p>
+                    <p style="margin: 0.5rem 0; font-size:0.9rem;"><strong>Type:</strong> <span id="grade-type"></span></p>
+                    <p style="margin: 0.5rem 0 1.25rem 0; font-size:0.9rem;"><strong>Max Marks:</strong> <span id="grade-max"></span></p>
+                    
+                    <label style="font-weight: 700; font-size:0.85rem; color:var(--text-light); text-transform:uppercase; letter-spacing:0.05em;">Total Marks Awarded (Auto-Sum):</label>
+                    <input type="number" id="grade-marks" readonly placeholder="Fill scores in cover page rubric table" style="margin-bottom: 1rem; font-weight:700; font-size:1.1rem; color:var(--primary);">
+                    
+                    <label style="font-weight: 700; font-size:0.85rem; color:var(--text-light); text-transform:uppercase; letter-spacing:0.05em;">Faculty Remarks:</label>
+                    <input type="text" id="grade-remarks" placeholder="Optional comments..." style="margin-bottom: 1.5rem;">
+                    
+                    <button class="success" id="btn-approve-grade" onclick="app.submitGrade()" style="width:100%; padding:0.85rem;">Digitally Sign & Approve</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- SHARED EDITOR -->
+        <div id="editor-view" class="hidden">
+            <div class="workspace-header no-print">
+                <div class="flex-between" style="margin-bottom: 1.25rem;">
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <span style="font-size:1.5rem;">✍️</span>
+                        <h3 style="margin:0; border:none;">Document Editor</h3>
+                    </div>
+                    <div style="display: flex; gap: 0.6rem;">
+                        <button class="outline" onclick="app.closeEditor()">Close</button>
+                        <button class="success" id="btn-save-draft" onclick="app.saveDocument('draft', false)">Save Draft</button>
+                        <button class="primary" id="btn-submit-final" onclick="app.saveDocument('submitted', false)">Final Submit</button>
+                        <button class="outline" id="btn-print" onclick="window.print()">Download PDF</button>
+                    </div>
+                </div>
+                <div class="grid-4" id="editor-meta">
+                    <input type="text" id="doc-title" placeholder="Title (e.g. Verification of Logic Gates)">
+                    <select id="doc-subject" onchange="app.autoFillSubjectCode()"></select>
+                    <input type="text" id="doc-subject-code" readonly placeholder="Auto Subject Code">
+                    <select id="doc-type" onchange="app.updateCoverPageUI()">
+                        <option value="Assignment">Assignment</option><option value="Experiment">Experiment / Lab</option>
+                    </select>
+                    <input type="text" id="doc-number" placeholder="Doc No (e.g. 01)" oninput="app.updateCoverPageUI()">
+                    <input type="text" id="doc-date" readonly placeholder="Date: Auto-filled on Submit" style="grid-column: span 3;">
+                </div>
+            </div>
+
+            <div class="toolbar no-print" id="editor-toolbar">
+                <button onclick="document.execCommand('bold', false, null)" title="Bold (Ctrl+B)"><b>B</b></button>
+                <button onclick="document.execCommand('italic', false, null)" title="Italic (Ctrl+I)"><i>I</i></button>
+                <button onclick="document.execCommand('underline', false, null)" title="Underline (Ctrl+U)"><u>U</u></button>
+                <div class="toolbar-divider"></div>
+                <button onclick="document.execCommand('justifyLeft', false, null)">Align L</button>
+                <button onclick="document.execCommand('justifyCenter', false, null)">Center</button>
+                <button onclick="document.execCommand('justifyRight', false, null)">Align R</button>
+                <div class="toolbar-divider"></div>
+                <button onclick="document.execCommand('insertUnorderedList', false, null)">• List</button>
+                <button onclick="document.execCommand('insertOrderedList', false, null)">1. List</button>
+                <div class="toolbar-divider"></div>
+                <select onchange="document.execCommand('formatBlock', false, this.value)">
+                    <option value="p">Normal Text</option>
+                    <option value="h2">Heading 1</option>
+                    <option value="h3">Heading 2</option>
+                </select>
+                <input type="color" onchange="document.execCommand('foreColor', false, this.value)" title="Text Color" style="margin-left: 0.3rem;">
+                <div class="toolbar-divider"></div>
+                <button onclick="app.insertTable()">▦ Table</button>
+                <button onclick="app.insertCodeBlock()" style="font-family: monospace;">{ } Code Box</button>
+                <button onclick="app.openCanvas()" style="color:var(--primary); font-weight:700;">✎ Canvas</button>
+                <button class="outline" onclick="app.toggleFullscreen()" style="margin-left:auto;">⛶ Focus Mode</button>
+            </div>
+
+            <div class="a4-container" id="editor-scroll-area">
+                <div class="a4-page" id="a4-paper" style="transform: scale(1);">
+                    <div id="pdf-watermark" class="watermark"></div>
+                    <div id="cover-page-render" class="cover-page"></div>
+                    <div id="rich-editor" contenteditable="true" placeholder="Start typing manually... Note: Copy/Pasting is strictly disabled for security."></div>
+                </div>
+            </div>
+            
+            <div class="zoom-controls no-print" id="zoom-controls">
+                <button onclick="app.zoomPage(0.1)">+</button>
+                <button onclick="app.zoomPage(-0.1)">-</button>
+            </div>
+            
+            <div class="editor-footer no-print" id="editor-stats">
+                <span id="word-count">Words: 0 / Goal: <input type="number" id="word-goal" value="500" style="width:65px; padding:2px 6px; margin:0; display:inline;"></span>
+                <span id="auto-save-status">Draft Status: Unsaved</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- CANVAS MODAL -->
+    <div class="modal-overlay hidden" id="canvas-modal">
+        <div class="modal-content">
+            <div class="flex-between" style="margin-bottom: 1rem;">
+                <h3 style="margin:0; border:none;">Engineering Canvas & Diagram Drawer</h3>
+                <button class="outline" onclick="app.closeCanvas()">Cancel</button>
+            </div>
+            <canvas id="drawing-canvas" width="730" height="400"></canvas>
+            <div class="flex-between" style="margin-top: 1rem;">
+                <button class="danger" onclick="app.clearCanvas()">Clear Canvas</button>
+                <button class="success" onclick="app.saveCanvas()">Insert Diagram into Document</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JURY GUIDE MODAL -->
+    <div class="modal-overlay hidden" id="jury-modal">
+        <div class="modal-content">
+            <div class="flex-between" style="margin-bottom: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 1rem;">
+                <div>
+                    <h2 style="margin:0; color:var(--primary); font-size:1.4rem;">🎯 Jury Testing & Live Evaluation Instructions</h2>
+                    <p style="margin:0.25rem 0 0 0; color:var(--text-light); font-size:0.85rem;">Follow these test scenarios to evaluate WriteUp Pro’s end-to-end functionality.</p>
+                </div>
+                <button class="outline" onclick="app.closeJuryGuide()">Got it, Start Testing!</button>
+            </div>
+
+            <div style="margin-bottom: 1.5rem;">
+                <h4 style="margin:0 0 0.5rem 0; color:var(--secondary);">🔑 Default Credentials (Password: <code>password</code>)</h4>
+                <table class="cred-table">
+                    <thead>
+                        <tr><th>Role</th><th>Username</th><th>Password</th><th>Quick Test Action</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>Student</td><td><code>student</code></td><td><code>password</code></td><td><button class="outline" style="padding:2px 8px; font-size:0.75rem;" onclick="app.quickLogin('student')">Login as Student</button></td></tr>
+                        <tr><td>Faculty</td><td><code>faculty</code></td><td><code>password</code></td><td><button class="outline" style="padding:2px 8px; font-size:0.75rem;" onclick="app.quickLogin('faculty')">Login as Faculty</button></td></tr>
+                        <tr><td>Admin</td><td><code>admin</code></td><td><code>password</code></td><td><button class="outline" style="padding:2px 8px; font-size:0.75rem;" onclick="app.quickLogin('admin')">Login as Admin</button></td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div style="display:flex; flex-direction:column; gap:10px;">
+                <div class="jury-step-box">
+                    <div class="jury-step-title"><span>1️⃣</span> Test Registration & Revert System</div>
+                    <p style="margin:0; font-size:0.85rem; color:var(--text-light);">
+                        Login as <b>Student</b> → Fill setup form. Status becomes <b>Pending</b>. Switch to <b>Admin</b> → Click <b>Revert/Reject</b> and add a remark. 
+                        Switch back to <b>Student</b> to see the red discrepancy alert and pre-filled data! Switch to <b>Admin</b> to fully <b>Approve</b>.
+                    </p>
+                </div>
+
+                <div class="jury-step-box">
+                    <div class="jury-step-title"><span>2️⃣</span> Test Student Authoring & Anti-Paste Engine</div>
+                    <p style="margin:0; font-size:0.85rem; color:var(--text-light);">
+                        Login as <b>Student</b> (Once approved) → Click <b>+ Create Document</b>. Enter Title, select Subject/Type. 
+                        <i>Try pasting text or switching tabs!</i> The system logs a security flag and alerts you via toast. Draw diagrams, insert tables, then click <b>Final Submit</b>.
+                    </p>
+                </div>
+
+                <div class="jury-step-box">
+                    <div class="jury-step-title"><span>3️⃣</span> Test Faculty Evaluation & Auto-Calculated Rubrics</div>
+                    <p style="margin:0; font-size:0.85rem; color:var(--text-light);">
+                        Login as <b>Faculty</b> → Open classroom folder → Click <b>Evaluate</b> on the submission. 
+                        Enter scores (0 to 4/5) directly in the dynamic cover page rubric table. Notice total marks auto-calculate and validate maximum marks. Click <b>Digitally Sign & Approve</b>.
+                    </p>
+                </div>
+            </div>
+
+            <div style="margin-top: 1.5rem; text-align: center;">
+                <button class="success" style="width:100%; padding:0.85rem; font-size:1rem;" onclick="app.closeJuryGuide()">Proceed to Platform Test</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/app.js"></script>
+</body>
+</html>
