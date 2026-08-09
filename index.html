@@ -21,15 +21,15 @@
                 <button class="icon-btn outline" onclick="app.toggleDarkMode()" title="Toggle Theme">🌙</button>
             </div>
         </div>
-        <div id="user-info" class="hidden" style="display: flex; align-items: center; justify-content: space-between; width: 100%; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border);">
-            <div style="display: flex; align-items: center; gap: 10px;">
+        <div id="user-info" class="hidden" style="display: flex; align-items: center; justify-content: space-between; width: 100%; margin-top: 6px; padding-top: 6px; border-top: 1px solid var(--border);">
+            <div style="display: flex; align-items: center; gap: 8px;">
                 <div class="avatar" id="user-avatar">U</div>
                 <div>
-                    <div style="font-weight: 700; font-size: 0.85rem;" id="welcome-text">Name</div>
-                    <div style="font-size: 0.7rem; color: var(--text-light);" id="role-text">Role</div>
+                    <div style="font-weight: 700; font-size: 0.8rem;" id="welcome-text">Name</div>
+                    <div style="font-size: 0.65rem; color: var(--text-light);" id="role-text">Role</div>
                 </div>
             </div>
-            <button onclick="app.logout()" class="danger outline" style="padding: 0.3rem 0.7rem; font-size: 0.8rem; height: auto;">Log Out</button>
+            <button onclick="app.logout()" class="danger outline" style="padding: 0.25rem 0.6rem; font-size: 0.75rem; height: auto; width: auto;">Log Out</button>
         </div>
     </header>
 
@@ -39,7 +39,7 @@
             <div style="text-align: center; margin-bottom: 1.25rem;">
                 <div style="display: inline-flex; align-items: center; justify-content: center; width: 48px; height: 48px; background: var(--primary-gradient); color: white; border-radius: 14px; font-size: 1.25rem; margin-bottom: 0.75rem; box-shadow: var(--shadow-lg);">📝</div>
                 <h3 style="border:none; margin:0; font-size: 1.35rem;">Secure Portal Login</h3>
-                <p style="color: var(--text-light); margin-top: 0.3rem; font-size: 0.85rem;">Authenticate as student, faculty, or administrator</p>
+                <p style="color: var(--text-light); margin-top: 0.4rem; font-size: 0.85rem;">Authenticate as student, faculty, or administrator</p>
             </div>
             
             <input type="text" id="username" placeholder="Username (student / faculty / admin)">
@@ -69,7 +69,7 @@
                         <option value="name">Sort Students: Name</option>
                         <option value="roll">Sort Students: Roll No</option>
                     </select>
-                    <button onclick="app.exportCSV()" class="success" style="flex: 1; min-width: 180px;">📥 Export Ledger (CSV)</button>
+                    <button onclick="app.exportCSV()" class="success" style="flex: 1; min-width: 180px; width:auto;">📥 Export Ledger (CSV)</button>
                 </div>
             </div>
             
@@ -154,7 +154,7 @@
                             <option value="subject">Sort: Subject</option>
                         </select>
                         <input type="text" id="stu-search" placeholder="🔍 Search documents..." oninput="app.renderStudentDashboard()" style="flex: 2; margin:0;">
-                        <button onclick="app.openEditor(null)" class="success" style="flex: 1; margin: 0;">+ Create Document</button>
+                        <button onclick="app.openEditor(null)" class="success" style="flex: 1; margin: 0; width:auto;">+ Create Document</button>
                     </div>
                     <div id="student-docs-list"></div>
                 </div>
@@ -216,10 +216,10 @@
                         <h3 style="margin:0; border:none; font-size: 1.2rem;">Document Editor</h3>
                     </div>
                     <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
-                        <button class="outline" style="padding: 0.4rem 0.6rem; font-size: 0.8rem;" onclick="app.closeEditor()">Close</button>
-                        <button class="success" id="btn-save-draft" style="padding: 0.4rem 0.6rem; font-size: 0.8rem;" onclick="app.saveDocument('draft', false)">Save Draft</button>
-                        <button class="primary" id="btn-submit-final" style="padding: 0.4rem 0.6rem; font-size: 0.8rem;" onclick="app.saveDocument('submitted', false)">Submit</button>
-                        <button class="outline" id="btn-print" style="padding: 0.4rem 0.6rem; font-size: 0.8rem;" onclick="window.print()">PDF</button>
+                        <button class="outline" style="padding: 0.4rem 0.6rem; font-size: 0.8rem; width:auto;" onclick="app.closeEditor()">Close</button>
+                        <button class="success" id="btn-save-draft" style="padding: 0.4rem 0.6rem; font-size: 0.8rem; width:auto;" onclick="app.saveDocument('draft', false)">Save Draft</button>
+                        <button class="primary" id="btn-submit-final" style="padding: 0.4rem 0.6rem; font-size: 0.8rem; width:auto;" onclick="app.saveDocument('submitted', false)">Submit</button>
+                        <button class="outline" id="btn-print" style="padding: 0.4rem 0.6rem; font-size: 0.8rem; width:auto;" onclick="window.print()">PDF</button>
                     </div>
                 </div>
                 <div class="grid-4" id="editor-meta">
@@ -235,12 +235,12 @@
             </div>
 
             <div class="toolbar no-print" id="editor-toolbar">
-                <button onclick="document.execCommand('bold', false, null)" title="Bold"><b>B</b></button>
-                <button onclick="document.execCommand('italic', false, null)" title="Italic"><i>I</i></button>
-                <button onclick="document.execCommand('underline', false, null)" title="Underline"><u>U</u></button>
+                <button onclick="document.execCommand('bold', false, null)" title="Bold" style="width:auto;"><b>B</b></button>
+                <button onclick="document.execCommand('italic', false, null)" title="Italic" style="width:auto;"><i>I</i></button>
+                <button onclick="document.execCommand('underline', false, null)" title="Underline" style="width:auto;"><u>U</u></button>
                 <div class="toolbar-divider"></div>
-                <button onclick="document.execCommand('insertUnorderedList', false, null)">• List</button>
-                <button onclick="document.execCommand('insertOrderedList', false, null)">1. List</button>
+                <button onclick="document.execCommand('insertUnorderedList', false, null)" style="width:auto;">• List</button>
+                <button onclick="document.execCommand('insertOrderedList', false, null)" style="width:auto;">1. List</button>
                 <div class="toolbar-divider"></div>
                 <select onchange="document.execCommand('formatBlock', false, this.value)">
                     <option value="p">Normal</option>
@@ -249,9 +249,9 @@
                 </select>
                 <input type="color" onchange="document.execCommand('foreColor', false, this.value)" title="Color" style="margin-left: 0.2rem;">
                 <div class="toolbar-divider"></div>
-                <button onclick="app.insertTable()">Table</button>
-                <button onclick="app.insertCodeBlock()">Code</button>
-                <button onclick="app.openCanvas()" style="color:var(--primary); font-weight:700;">Canvas</button>
+                <button onclick="app.insertTable()" style="width:auto;">Table</button>
+                <button onclick="app.insertCodeBlock()" style="width:auto;">Code</button>
+                <button onclick="app.openCanvas()" style="color:var(--primary); font-weight:700; width:auto;">Canvas</button>
             </div>
 
             <div class="a4-container" id="editor-scroll-area">
@@ -259,84 +259,3 @@
                     <div id="pdf-watermark" class="watermark"></div>
                     <div id="cover-page-render" class="cover-page"></div>
                     <div id="rich-editor" contenteditable="true" placeholder="Start typing manually here... (Paste disabled)"></div>
-                </div>
-            </div>
-            
-            <div class="zoom-controls no-print" id="zoom-controls">
-                <button onclick="app.zoomPage(0.1)">+</button>
-                <button onclick="app.zoomPage(-0.1)">-</button>
-            </div>
-            
-            <div class="editor-footer no-print" id="editor-stats">
-                <span id="word-count" style="font-size: 0.75rem;">Words: 0 / Goal: <input type="number" id="word-goal" value="500" style="width:50px; padding:2px; margin:0; display:inline;"></span>
-                <span id="auto-save-status" style="font-size: 0.75rem;">Unsaved</span>
-            </div>
-        </div>
-    </div>
-
-    <!-- CANVAS MODAL -->
-    <div class="modal-overlay hidden" id="canvas-modal">
-        <div class="modal-content">
-            <div class="flex-between" style="margin-bottom: 0.75rem;">
-                <h3 style="margin:0; border:none; font-size: 1.1rem;">Engineering Canvas</h3>
-                <button class="outline" style="padding: 0.3rem 0.6rem; font-size: 0.8rem;" onclick="app.closeCanvas()">Cancel</button>
-            </div>
-            <canvas id="drawing-canvas" width="730" height="350"></canvas>
-            <div class="flex-between" style="margin-top: 0.75rem;">
-                <button class="danger" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;" onclick="app.clearCanvas()">Clear</button>
-                <button class="success" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;" onclick="app.saveCanvas()">Insert Diagram</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- JURY GUIDE MODAL -->
-    <div class="modal-overlay hidden" id="jury-modal">
-        <div class="modal-content">
-            <div class="flex-between" style="margin-bottom: 0.75rem; border-bottom: 1px solid var(--border); padding-bottom: 0.75rem;">
-                <div>
-                    <h2 style="margin:0; color:var(--primary); font-size:1.15rem;">🎯 Jury Testing Instructions</h2>
-                </div>
-                <button class="outline" style="padding: 0.3rem 0.6rem; font-size: 0.75rem;" onclick="app.closeJuryGuide()">Close</button>
-            </div>
-
-            <div style="margin-bottom: 1rem;">
-                <h4 style="margin:0 0 0.4rem 0; color:var(--secondary); font-size: 0.9rem;">🔑 Default Credentials (Password: <code>password</code>)</h4>
-                <table class="cred-table">
-                    <thead>
-                        <tr><th>Role</th><th>Username</th><th>Action</th></tr>
-                    </thead>
-                    <tbody>
-                        <tr><td>Student</td><td><code>student</code></td><td><button class="outline" style="padding:2px 6px; font-size:0.7rem;" onclick="app.quickLogin('student')">Login</button></td></tr>
-                        <tr><td>Faculty</td><td><code>faculty</code></td><td><button class="outline" style="padding:2px 6px; font-size:0.7rem;" onclick="app.quickLogin('faculty')">Login</button></td></tr>
-                        <tr><td>Admin</td><td><code>admin</code></td><td><button class="outline" style="padding:2px 6px; font-size:0.7rem;" onclick="app.quickLogin('admin')">Login</button></td></tr>
-                    </tbody>
-                </table>
-            </div>
-
-            <div style="display:flex; flex-direction:column; gap:8px;">
-                <div class="jury-step-box">
-                    <div class="jury-step-title"><span>1️⃣</span> Registration & Revert System</div>
-                    <p style="margin:0; font-size:0.8rem; color:var(--text-light);">Login as Student, fill form. Admin can revert/reject with remarks. Student sees warning alert and can correct.</p>
-                </div>
-
-                <div class="jury-step-box">
-                    <div class="jury-step-title"><span>2️⃣</span> Anti-Paste Engine</div>
-                    <p style="margin:0; font-size:0.8rem; color:var(--text-light);">Type manually in editor. Pasting text or switching tabs triggers security warnings instantly.</p>
-                </div>
-
-                <div class="jury-step-box">
-                    <div class="jury-step-title"><span>3️⃣</span> Rubric Evaluation</div>
-                    <p style="margin:0; font-size:0.8rem; color:var(--text-light);">Faculty evaluates via cover page rubric table with auto-sum calculation.</p>
-                </div>
-            </div>
-
-            <div style="margin-top: 1.25rem; text-align: center;">
-                <button class="success" style="width:100%; padding:0.75rem; font-size:0.9rem;" onclick="app.closeJuryGuide()">Start Testing</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Scripts -->
-    <script src="app.js"></script>
-</body>
-</html>
