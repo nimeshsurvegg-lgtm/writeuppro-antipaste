@@ -153,17 +153,31 @@ body.dark-mode .a4-page { filter: invert(0.9) hue-rotate(180deg); }
 .cred-table th, .cred-table td { border: 1px solid var(--border); padding: 0.5rem; font-size: 0.8rem; text-align: left; }
 .cred-table th { background: var(--bg); font-weight: 700; }
 
-/* --- MOBILE RESPONSIVE MEDIA QUERY FIXES --- */
+/* --- MOBILE RESPONSIVE FIXES FOR CLICKS & OVERLAPS --- */
 @media (max-width: 768px) {
-    header { padding: 0.75rem 1rem; flex-direction: column; gap: 10px; align-items: stretch; }
+    header { padding: 0.6rem 0.75rem; flex-direction: column; gap: 8px; align-items: stretch; }
     header > div { justify-content: space-between; width: 100%; }
+    
+    /* Ensure user info section stacks cleanly and avoids overlapping */
+    #user-info { flex-direction: column; align-items: flex-start !important; gap: 8px; }
+    #user-info > div { width: 100%; display: flex; align-items: center; gap: 10px; }
+    #user-info button { width: 100%; }
+
     .grid-2, .grid-4 { grid-template-columns: 1fr; gap: 0.75rem; }
-    .container { padding: 0 0.75rem; margin: 1rem auto; }
-    .card { padding: 1.25rem; margin-bottom: 1.25rem; }
-    .filter-bar { flex-direction: column; align-items: stretch; }
-    .filter-bar input, .filter-bar select, .filter-bar button { width: 100% !important; margin: 0; }
-    .workspace-header { padding: 1rem; }
-    #editor-meta { grid-template-columns: 1fr; }
-    #editor-meta input[style*="grid-column"] { grid-column: span 1 !important; }
+    .container { padding: 0 0.5rem; margin: 0.5rem auto; }
+    .card { padding: 1rem; margin-bottom: 1rem; }
+    
+    /* Fix metadata fields inside the editor so dropdowns are fully clickable */
+    .workspace-header { padding: 0.85rem; }
+    #editor-meta { display: flex; flex-direction: column; gap: 0.5rem; }
+    #editor-meta input, #editor-meta select { width: 100% !important; margin: 0 !important; }
+    
+    /* Fix toolbar wrapping */
+    .toolbar { position: static; margin-bottom: 1rem; padding: 0.4rem; gap: 0.25rem; }
+    .toolbar button, .toolbar select { font-size: 0.75rem; padding: 0.3rem 0.5rem; }
+
+    .filter-bar { flex-direction: column; align-items: stretch; gap: 0.5rem; }
+    .filter-bar input, .filter-bar select, .filter-bar button { width: 100% !important; margin: 0 !important; }
+    
     .split-view { flex-direction: column; }
 }
