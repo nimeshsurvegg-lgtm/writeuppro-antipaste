@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 
 
 <div align="center">
@@ -13,8 +14,29 @@
 [![TailwindCSS](https://img.shields.io/badge/UI-Tailwind%20CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com)
 
 </div>
+=======
 
-**WriteUp Pro** is a modern, enterprise-grade academic productivity, document authoring, academic integrity monitoring, submission management, faculty evaluation, and institutional administration platform. 
+<div align="center">
+
+# WriteUp Pro
+### Smart Academic Writing & Evaluation Platform 📝✨
+
+A Smart Academic Workspace
+
+[![LIVE APPLICATION](https://img.shields.io/badge/🚀_OPEN_LIVE_APPLICATION-Visit_Website-blue?style=for-the-badge)](https://writeuppro-antipaste.vercel.app)
+
+[![FastAPI](https://img.shields.io/badge/Backend-FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
+[![React](https://img.shields.io/badge/Frontend-React_19-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev)
+[![TailwindCSS](https://img.shields.io/badge/UI-Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com)
+[![SQLite](https://img.shields.io/badge/Database-SQLite%20%2F%20PostgreSQL-003B57?style=for-the-badge&logo=sqlite&logoColor=white)](https://sqlite.org)
+[![Docker](https://img.shields.io/badge/Deployment-Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com)
+>>>>>>> 23a34e9 (Fix README formatting and live application link)
+
+</div>
+
+---
+
+**WriteUp Pro** is a modern, enterprise-grade academic productivity, document authoring, academic integrity monitoring, submission management, faculty evaluation, and institutional administration platform.
 
 It solves the widespread problem of academic dishonesty and evasion in laboratory write-ups and assignments by enforcing manual authoring, continuous integrity telemetry, and server-side rubric validations—all while delivering an intuitive SaaS experience for students, faculty, and institutional administrators.
 
