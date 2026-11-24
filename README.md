@@ -1,43 +1,29 @@
 
-
-<div align="center">
-
-# WriteUp Pro — Smart Academic Writing & Evaluation Platform 📝✨
-
-[![🚀 OPEN LIVE APPLICATION](https://img.shields.io/badge/🚀_OPEN_LIVE_APPLICATION-Visit_Website-blue?style=for-the-badge)](https://writeuppro-antipaste.vercel.app)
-
-### A Smart Academic Workspace
-
-[![FastAPI](https://img.shields.io/badge/Backend-FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
-[![React](https://img.shields.io/badge/Frontend-React%2019-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev)
-[![TailwindCSS](https://img.shields.io/badge/UI-Tailwind%20CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com)
-
-</div>
-=======
-
 <div align="center">
 
 # WriteUp Pro
 ### Smart Academic Writing & Evaluation Platform 📝✨
 
-A Smart Academic Workspace
+A Smart Academic Workspace for Students, Faculty & Administrators
 
-[![LIVE APPLICATION](https://img.shields.io/badge/🚀_OPEN_LIVE_APPLICATION-Visit_Website-blue?style=for-the-badge)](https://writeuppro-antipaste.vercel.app)
+[![OPEN LIVE APPLICATION](https://img.shields.io/badge/🚀_OPEN_LIVE_APPLICATION-Visit_Website-blue?style=for-the-badge)](https://writeuppro-antipaste.vercel.app)
 
-[![FastAPI](https://img.shields.io/badge/Backend-FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
-[![React](https://img.shields.io/badge/Frontend-React_19-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev)
-[![TailwindCSS](https://img.shields.io/badge/UI-Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com)
+[![FastAPI](https://img.shields.io/badge/Backend-FastAPI%200.165-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
+[![React](https://img.shields.io/badge/Frontend-React%2019%20%2B%20TypeScript-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev)
+[![TailwindCSS](https://img.shields.io/badge/UI-Tailwind%20CSS%20v4-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com)
 [![SQLite](https://img.shields.io/badge/Database-SQLite%20%2F%20PostgreSQL-003B57?style=for-the-badge&logo=sqlite&logoColor=white)](https://sqlite.org)
-[![Docker](https://img.shields.io/badge/Deployment-Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com)
->>>>>>> 23a34e9 (Fix README formatting and live application link)
+[![Docker](https://img.shields.io/badge/Deployment-Docker%20%26%20Compose-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com)
+[![Pytest](https://img.shields.io/badge/Testing-Pytest%20Suite%20100%25-0A9EDC?style=for-the-badge&logo=pytest&logoColor=white)](https://pytest.org)
 
 </div>
 
 ---
 
+## 📖 About WriteUp Pro
+
 **WriteUp Pro** is a modern, enterprise-grade academic productivity, document authoring, academic integrity monitoring, submission management, faculty evaluation, and institutional administration platform.
 
-It solves the widespread problem of academic dishonesty and evasion in laboratory write-ups and assignments by enforcing manual authoring, continuous integrity telemetry, and server-side rubric validations—all while delivering an intuitive SaaS experience for students, faculty, and institutional administrators.
+It solves the widespread problem of academic dishonesty and evasion in laboratory write-ups and assignments by enforcing manual authoring, continuous integrity telemetry, and server-side rubric validations — all while delivering an intuitive SaaS experience for students, faculty, and institutional administrators.
 
 ---
 
@@ -81,7 +67,9 @@ flowchart TD
 
 ## 🔑 Default Credentials
 
-For quick evaluation and testing, default institutional accounts are pre-seeded in the database. The password for all pre-configured accounts is: `password`
+For quick evaluation and testing, default institutional accounts are pre-seeded in the database.
+
+**Password for all pre-configured accounts:** `password`
 
 | Role | Username | Password | Features & Privileges |
 | :--- | :--- | :--- | :--- |
@@ -94,27 +82,31 @@ For quick evaluation and testing, default institutional accounts are pre-seeded 
 ## 🚀 Key Functional Capabilities
 
 ### 👨‍🎓 1. Student Workspace & Advanced Document Editor
-* **Institutional Setup & Onboarding:** First-time students register their Branch, Year (FE/SE/TE/BE), Semester, Division, and Open Electives. If an application is reverted by an administrator, the student receives discrepancy remarks and pre-filled fields for easy resubmission.
-* **Manual Academic Word Processor:** Full formatting toolbar supporting headings (H1, H2), bold, italics, underline, strikethrough, lists, tables, syntax-styled code blocks, and dynamic A4 layout with page zoom controls.
-* **Academic Integrity Policy Enforcement:** Strictly intercepts paste (`Ctrl+V`) and drag-and-drop events, monitoring keystroke bursts (< 30ms interval) and window blur/tab switches. All telemetry events are logged to the server-side integrity ledger.
-* **Engineering Canvas & Diagram Drawer:** Integrated vector and freehand drawing workspace supporting pen, lines, arrows, rectangles, circles, grid overlays, undo/redo, and direct embedding into academic write-ups.
-* **Auto-Generated Cover Pages:** Real-time generation of institutional cover pages including university metadata, student roll numbers, and dynamic rubric matrices for both **Assignments** (10 marks) and **Experiments** (15 marks).
-* **Autosave & Version Snapshots:** Background debounced draft persistence with version snapshots ensuring work is never lost.
+
+- **Institutional Setup & Onboarding:** First-time students register their Branch, Year (FE/SE/TE/BE), Semester, Division, and Open Electives. If an application is reverted by an administrator, the student receives discrepancy remarks and pre-filled fields for easy resubmission.
+- **Manual Academic Word Processor:** Full formatting toolbar supporting headings (H1, H2), bold, italics, underline, strikethrough, lists, tables, syntax-styled code blocks, and dynamic A4 layout with page zoom controls.
+- **Academic Integrity Policy Enforcement:** Strictly intercepts paste (`Ctrl+V`) and drag-and-drop events, monitoring keystroke bursts (< 30ms interval) and window blur/tab switches. All telemetry events are logged to the server-side integrity ledger.
+- **Engineering Canvas & Diagram Drawer:** Integrated vector and freehand drawing workspace supporting pen, lines, arrows, rectangles, circles, grid overlays, undo/redo, and direct embedding into academic write-ups.
+- **Auto-Generated Cover Pages:** Real-time generation of institutional cover pages including university metadata, student roll numbers, and dynamic rubric matrices for both **Assignments** (10 marks) and **Experiments** (15 marks).
+- **Autosave & Version Snapshots:** Background debounced draft persistence with version snapshots ensuring work is never lost.
 
 ### 👨‍🏫 2. Faculty Evaluation & Digital Approval Workspace
-* **Classroom Folders:** Student submissions are automatically sorted into classroom folders (e.g. `SE - Computer Engineering (Div A)`).
-* **Split-View Evaluation Panel:** Evaluates the read-only student submission side-by-side with an interactive grading rubric.
-* **Rubric Validation Engine:** Auto-calculates total marks and enforces strict maximum score validations (Knowledge $\le 4$, Content $\le 3$, Punctuality $\le 3$, Performance $\le 5$). Total marks cannot exceed 10 for Assignments or 15 for Experiments.
-* **Digital Approval Stamps:** Automatically computes and records a verifiable digital approval signature hash (e.g. `SIG-FAC9021-IIET-XXXX`) and timestamp upon submission finalization.
-* **Controlled Resubmission / Return:** Faculty can return documents requiring corrections with remarks, automatically unlocking the student's draft.
+
+- **Classroom Folders:** Student submissions are automatically sorted into classroom folders (e.g. `SE - Computer Engineering (Div A)`).
+- **Split-View Evaluation Panel:** Evaluates the read-only student submission side-by-side with an interactive grading rubric.
+- **Rubric Validation Engine:** Auto-calculates total marks and enforces strict maximum score validations (Knowledge ≤ 4, Content ≤ 3, Punctuality ≤ 3, Performance ≤ 5). Total marks cannot exceed 10 for Assignments or 15 for Experiments.
+- **Digital Approval Stamps:** Automatically computes and records a verifiable digital approval signature hash (e.g. `SIG-FAC9021-IIET-XXXX`) and timestamp upon submission finalization.
+- **Controlled Resubmission / Return:** Faculty can return documents requiring corrections with remarks, automatically unlocking the student's draft.
 
 ### 🛡️ 3. Administrator Control Center & Ledgers
-* **Registration Review System:** Review pending student profile registrations. Approve them to grant workspace access, or revert/reject them with custom discrepancy remarks.
-* **Security & Integrity Ledger:** Real-time ledger recording telemetry alerts (Paste attempts, Drop attempts, Focus switches, Keystroke bursts) with metadata, severity, and review workflows (Dismiss, Investigate).
-* **Institutional Grade Book & CSV Export:** Download comprehensive institutional grade records and integrity logs in standard CSV format.
+
+- **Registration Review System:** Review pending student profile registrations. Approve them to grant workspace access, or revert/reject them with custom discrepancy remarks.
+- **Security & Integrity Ledger:** Real-time ledger recording telemetry alerts (Paste attempts, Drop attempts, Focus switches, Keystroke bursts) with metadata, severity, and review workflows (Dismiss, Investigate).
+- **Institutional Grade Book & CSV Export:** Download comprehensive institutional grade records and integrity logs in standard CSV format.
 
 ### 🖨️ 4. Server-Side A4 PDF Generation
-* Built with Python **ReportLab**, producing authentic two-pass numbered (`Page X of Y`) institutional PDFs complete with formal cover pages, rubric breakdown tables, rendered write-up content, embedded engineering diagrams, and faculty digital verification stamps.
+
+Built with Python **ReportLab**, producing authentic two-pass numbered (`Page X of Y`) institutional PDFs complete with formal cover pages, rubric breakdown tables, rendered write-up content, embedded engineering diagrams, and faculty digital verification stamps.
 
 ---
 
@@ -158,21 +150,25 @@ writeuppro-antipaste/
 ## 🛠️ Installation & Local Development
 
 ### Prerequisites
-- **Python**: 3.11 or higher
-- **Node.js**: 18.0 or higher
+
+- **Python:** 3.11 or higher
+- **Node.js:** 18.0 or higher
 - **npm** or **yarn**
 
 ### Quick Start (Full-Stack in 2 Minutes)
 
-#### 1. Setup Backend:
+#### 1. Setup Backend
+
 ```bash
 # Navigate to repository root
 cd writeuppro-antipaste
 
 # Create and activate Python virtual environment
 python -m venv .venv
+
 # On Windows:
 .\.venv\Scripts\activate
+
 # On Linux/macOS:
 # source .venv/bin/activate
 
@@ -185,12 +181,17 @@ pytest backend/tests/test_api.py -v
 # Start the FastAPI backend service
 uvicorn app.main:app --app-dir backend --reload --port 8000
 ```
-Backend API will be running at `http://localhost:8000`  
+
+Backend API: `http://localhost:8000`
+
 Interactive Swagger API documentation: `http://localhost:8000/docs`
 
-#### 2. Setup Frontend:
+#### 2. Setup Frontend
+
+Open a new terminal:
+
 ```bash
-# In a new terminal:
+# Navigate to frontend directory
 cd writeuppro-antipaste/frontend
 
 # Install dependencies
@@ -199,7 +200,8 @@ npm install
 # Start Vite development server
 npm run dev
 ```
-Frontend will be running at `http://localhost:3000`
+
+Frontend will be running at `http://localhost:3000`.
 
 ---
 
@@ -211,21 +213,22 @@ To run the entire full-stack platform using Docker:
 docker-compose up --build
 ```
 
-- **Frontend Application**: `http://localhost:3000`
-- **Backend API**: `http://localhost:8000`
-- **API Documentation**: `http://localhost:8000/docs`
+- **Frontend Application:** `http://localhost:3000`
+- **Backend API:** `http://localhost:8000`
+- **API Documentation:** `http://localhost:8000/docs`
 
 ---
 
 ## 🧪 Automated Testing Suite
 
-WriteUp Pro includes automated tests covering authentication, RBAC authorization, document authoring, rubric validation, and PDF/CSV exports:
+WriteUp Pro includes automated tests covering authentication, RBAC authorization, document authoring, rubric validation, and PDF/CSV exports.
 
 ```bash
 .\.venv\Scripts\pytest backend/tests/test_api.py -v
 ```
 
 Test coverage includes:
+
 - `test_health_check`: Service availability and version metadata.
 - `test_auth_login_all_roles`: Token issuance and credential verification for Student, Faculty, and Admin.
 - `test_role_authorization_security`: Verification that students are forbidden from administrative endpoints (HTTP 403).
@@ -234,6 +237,16 @@ Test coverage includes:
 - `test_rubric_limit_enforcement`: Validation that rubric criteria and maximum marks are strictly enforced on the server.
 - `test_integrity_event_logging`: Logging and persistence of paste/telemetry events.
 - `test_grading_ledger_csv_export`: Verification of institutional CSV grade archives.
+
+---
+
+## 🌐 Live Deployment
+
+| Component | Platform | URL |
+| :--- | :--- | :--- |
+| Frontend | Vercel | https://writeuppro-antipaste.vercel.app |
+| Backend | Render | https://writeuppro-antipaste.onrender.com |
+| API Documentation | Render | https://writeuppro-antipaste.onrender.com/docs |
 
 ---
 
