@@ -1,4 +1,5 @@
 
+<div align="center">
 
 # WriteUp Pro — Smart Academic Writing & Evaluation Platform 📝✨
 
@@ -10,6 +11,7 @@
 [![SQLite](https://img.shields.io/badge/Database-SQLite%20%2F%20PostgreSQL-003B57?style=for-the-badge&logo=sqlite&logoColor=white)](https://sqlite.org)
 [![Docker](https://img.shields.io/badge/Deployment-Docker%20%26%20Compose-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com)
 [![Pytest](https://img.shields.io/badge/Testing-Pytest%20Suite%20100%25-0A9EDC?style=for-the-badge&logo=pytest&logoColor=white)](https://pytest.org)
+</div>
 
 **WriteUp Pro** is a modern, enterprise-grade academic productivity, document authoring, academic integrity monitoring, submission management, faculty evaluation, and institutional administration platform. 
 
