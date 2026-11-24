@@ -1,3 +1,7 @@
+# WriteUp Pro 📝
+
+[🚀 OPEN LIVE APPLICATION](YOUR-VERCEL-URL)
+
 # WriteUp Pro — Smart Academic Writing & Evaluation Platform 📝✨
 
 [![FastAPI](https://img.shields.io/badge/Backend-FastAPI%200.165-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
