@@ -73,56 +73,71 @@ export const AdminWorkspace: React.FC<AdminWorkspaceProps> = ({ currentUser, sho
 
   return (
     <div className="p-8 max-w-7xl mx-auto space-y-8">
-      {/* Overview Stat Cards */}
-      <div>
-        <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-          Administrator Control Center
+      {/* Overview Header */}
+      <div className="p-6 bg-white dark:bg-[#1D1814] border-2 border-[#1A1209] shadow-[4px_4px_0px_#1A1209]">
+        <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-[#B84915] block mb-1">
+          GOVERNANCE & TELEMETRY REGISTRY // INSTITUTIONAL AUDIT LEDGER
+        </span>
+        <h1 className="text-2xl font-black text-[#1A1209] dark:text-white tracking-tight">
+          Administrator Control Center.
         </h1>
-        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+        <p className="text-xs text-[#5C4D3C] dark:text-[#B8A99A] font-mono mt-1">
           Institutional oversight for student onboarding verification, academic security telemetry, and grading ledgers.
         </p>
       </div>
 
       {analytics && (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-          <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
-            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 block">Total Students</span>
-            <span className="text-2xl font-extrabold text-slate-900 dark:text-white mt-1 block">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 font-mono">
+          <div className="bg-white dark:bg-[#1D1814] p-4 border-2 border-[#1A1209] shadow-[3.5px_3.5px_0px_#1A1209]">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-[#786958] dark:text-[#A89886] block">
+              Total Students
+            </span>
+            <span className="text-2xl font-black text-[#1A1209] dark:text-white mt-1 block">
               {analytics.total_students}
             </span>
           </div>
 
-          <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
-            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 block">Pending Verification</span>
-            <span className="text-2xl font-extrabold text-amber-600 dark:text-amber-400 mt-1 block">
+          <div className="bg-white dark:bg-[#1D1814] p-4 border-2 border-[#1A1209] shadow-[3.5px_3.5px_0px_#1A1209]">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-[#B84915] block">
+              Pending Verify
+            </span>
+            <span className="text-2xl font-black text-[#B84915] mt-1 block">
               {analytics.pending_registrations}
             </span>
           </div>
 
-          <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
-            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 block">Total Faculty</span>
-            <span className="text-2xl font-extrabold text-slate-900 dark:text-white mt-1 block">
+          <div className="bg-white dark:bg-[#1D1814] p-4 border-2 border-[#1A1209] shadow-[3.5px_3.5px_0px_#1A1209]">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-[#786958] dark:text-[#A89886] block">
+              Total Faculty
+            </span>
+            <span className="text-2xl font-black text-[#1A1209] dark:text-white mt-1 block">
               {analytics.total_faculty}
             </span>
           </div>
 
-          <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
-            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 block">Authored Docs</span>
-            <span className="text-2xl font-extrabold text-slate-900 dark:text-white mt-1 block">
+          <div className="bg-white dark:bg-[#1D1814] p-4 border-2 border-[#1A1209] shadow-[3.5px_3.5px_0px_#1A1209]">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-[#786958] dark:text-[#A89886] block">
+              Authored Docs
+            </span>
+            <span className="text-2xl font-black text-[#1A1209] dark:text-white mt-1 block">
               {analytics.total_documents}
             </span>
           </div>
 
-          <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
-            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 block">Graded & Approved</span>
-            <span className="text-2xl font-extrabold text-emerald-600 dark:text-emerald-400 mt-1 block">
+          <div className="bg-white dark:bg-[#1D1814] p-4 border-2 border-[#1A1209] shadow-[3.5px_3.5px_0px_#1A1209]">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-[#1F5A2E] block">
+              Graded & Appr.
+            </span>
+            <span className="text-2xl font-black text-[#1F5A2E] dark:text-[#48BB78] mt-1 block">
               {analytics.graded_submissions}
             </span>
           </div>
 
-          <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
-            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 block">Integrity Flags</span>
-            <span className="text-2xl font-extrabold text-rose-600 dark:text-rose-400 mt-1 block">
+          <div className="bg-white dark:bg-[#1D1814] p-4 border-2 border-[#1A1209] shadow-[3.5px_3.5px_0px_#1A1209]">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-[#8B1A1A] block">
+              Integrity Flags
+            </span>
+            <span className="text-2xl font-black text-[#8B1A1A] mt-1 block">
               {analytics.total_integrity_events}
             </span>
           </div>
@@ -130,52 +145,52 @@ export const AdminWorkspace: React.FC<AdminWorkspaceProps> = ({ currentUser, sho
       )}
 
       {/* Tabs Bar */}
-      <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800">
-        <div className="flex gap-6">
+      <div className="flex flex-wrap items-center justify-between border-b-2 border-[#1A1209] pb-0 gap-3">
+        <div className="flex gap-2">
           <button
             onClick={() => setActiveTab('registrations')}
-            className={`pb-3 text-sm font-bold border-b-2 transition-colors flex items-center gap-2 ${
+            className={`neo-btn px-4 py-2 text-xs flex items-center gap-2 ${
               activeTab === 'registrations'
-                ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400'
-                : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                ? 'bg-[#1A365D] text-white shadow-[2px_2px_0px_#1A1209]'
+                : 'bg-white dark:bg-[#1D1814] text-[#1A1209] dark:text-[#D4C7B5]'
             }`}
           >
-            <GraduationCap className="w-4 h-4" /> Student Registrations
+            <GraduationCap className="w-4 h-4" /> STUDENT REGISTRATIONS
           </button>
 
           <button
             onClick={() => setActiveTab('integrity')}
-            className={`pb-3 text-sm font-bold border-b-2 transition-colors flex items-center gap-2 ${
+            className={`neo-btn px-4 py-2 text-xs flex items-center gap-2 ${
               activeTab === 'integrity'
-                ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400'
-                : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                ? 'bg-[#8B1A1A] text-white shadow-[2px_2px_0px_#1A1209]'
+                : 'bg-white dark:bg-[#1D1814] text-[#1A1209] dark:text-[#D4C7B5]'
             }`}
           >
-            <ShieldAlert className="w-4 h-4" /> Integrity & Cheat Ledger
+            <ShieldAlert className="w-4 h-4" /> INTEGRITY TELEMETRY
           </button>
 
           <button
             onClick={() => setActiveTab('ledger')}
-            className={`pb-3 text-sm font-bold border-b-2 transition-colors flex items-center gap-2 ${
+            className={`neo-btn px-4 py-2 text-xs flex items-center gap-2 ${
               activeTab === 'ledger'
-                ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400'
-                : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                ? 'bg-[#1F5A2E] text-white shadow-[2px_2px_0px_#1A1209]'
+                : 'bg-white dark:bg-[#1D1814] text-[#1A1209] dark:text-[#D4C7B5]'
             }`}
           >
-            <FileCheck className="w-4 h-4" /> Institutional Grading Ledger
+            <FileCheck className="w-4 h-4" /> GRADING LEDGER
           </button>
         </div>
 
         {/* Global Export Buttons */}
-        <div className="flex items-center gap-2 pb-3">
+        <div className="flex items-center gap-2 pb-2">
           {activeTab === 'integrity' && (
             <a
               href={api.exports.getIntegrityLedgerCsvUrl()}
               target="_blank"
               rel="noreferrer"
-              className="px-3.5 py-1.5 text-xs font-semibold text-white bg-slate-800 hover:bg-slate-700 dark:bg-slate-700 dark:hover:bg-slate-600 rounded-xl flex items-center gap-1.5 shadow-sm"
+              className="neo-btn px-3.5 py-1.5 text-xs bg-[#1A1209] text-white flex items-center gap-1.5"
             >
-              <Download className="w-3.5 h-3.5" /> Export Integrity CSV
+              <Download className="w-3.5 h-3.5 text-[#B84915]" /> EXPORT INTEGRITY CSV
             </a>
           )}
           {activeTab === 'ledger' && (
@@ -183,9 +198,9 @@ export const AdminWorkspace: React.FC<AdminWorkspaceProps> = ({ currentUser, sho
               href={api.exports.getGradingLedgerCsvUrl()}
               target="_blank"
               rel="noreferrer"
-              className="px-3.5 py-1.5 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl flex items-center gap-1.5 shadow-sm"
+              className="neo-btn px-3.5 py-1.5 text-xs bg-[#B84915] hover:bg-[#A03D0E] text-white flex items-center gap-1.5"
             >
-              <Download className="w-3.5 h-3.5" /> Export Grading CSV
+              <Download className="w-3.5 h-3.5" /> EXPORT GRADING CSV
             </a>
           )}
         </div>
@@ -193,41 +208,45 @@ export const AdminWorkspace: React.FC<AdminWorkspaceProps> = ({ currentUser, sho
 
       {/* Tab 1: Student Registrations Management */}
       {activeTab === 'registrations' && (
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden">
-          <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
-            <h3 className="font-bold text-sm text-slate-900 dark:text-white">Registered Student Profiles</h3>
-            <span className="text-xs text-slate-500">{profiles.length} Total Registrations</span>
+        <div className="bg-white dark:bg-[#1D1814] border-2 border-[#1A1209] shadow-[4px_4px_0px_#1A1209] overflow-hidden">
+          <div className="p-4 bg-[#F4EFE6] dark:bg-[#26201B] border-b-2 border-[#1A1209] flex items-center justify-between font-mono">
+            <span className="font-bold text-xs uppercase text-[#1A1209] dark:text-white">
+              REGISTERED STUDENT PROFILES
+            </span>
+            <span className="stamp-badge bg-white dark:bg-[#1D1814] text-[#1A1209] dark:text-white">
+              {profiles.length} REGISTRATIONS
+            </span>
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs border-collapse">
+            <table className="w-full text-left text-xs border-collapse font-mono">
               <thead>
-                <tr className="bg-slate-50 dark:bg-slate-800/40 text-slate-500 uppercase border-b border-slate-200 dark:border-slate-800">
-                  <th className="py-3 px-6 font-bold">Student Name</th>
+                <tr className="bg-[#FAF6EE] dark:bg-[#26201B] text-[#1A1209] dark:text-[#D4C7B5] uppercase border-b-2 border-[#1A1209]">
+                  <th className="py-3 px-6 font-bold font-sans">Student Name</th>
                   <th className="py-3 px-6 font-bold">Roll Number</th>
                   <th className="py-3 px-6 font-bold">Class & Branch</th>
                   <th className="py-3 px-6 font-bold">Division</th>
                   <th className="py-3 px-6 font-bold">Open Elective</th>
                   <th className="py-3 px-6 font-bold">Status</th>
-                  <th className="py-3 px-6 font-bold text-right">Actions</th>
+                  <th className="py-3 px-6 font-bold text-right font-sans">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+              <tbody className="divide-y border-b border-[#1A1209]/20">
                 {profiles.map((p) => (
-                  <tr key={p.user_id} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/40">
-                    <td className="py-3.5 px-6 font-bold text-slate-900 dark:text-white">{p.name || 'Student'}</td>
-                    <td className="py-3.5 px-6 font-mono font-semibold">{p.roll_number}</td>
-                    <td className="py-3.5 px-6 font-medium">{`${p.year_level} - ${p.branch_code}`}</td>
+                  <tr key={p.user_id} className="hover:bg-[#FAF6EE] dark:hover:bg-[#26201B] transition-colors">
+                    <td className="py-3.5 px-6 font-bold font-sans text-[#1A1209] dark:text-white">{p.name || 'Student'}</td>
+                    <td className="py-3.5 px-6 font-bold">{p.roll_number}</td>
+                    <td className="py-3.5 px-6">{`${p.year_level} - ${p.branch_code}`}</td>
                     <td className="py-3.5 px-6">{p.division_name}</td>
-                    <td className="py-3.5 px-6 text-slate-500">{p.elective_subject || 'None'}</td>
+                    <td className="py-3.5 px-6 text-[#786958]">{p.elective_subject || 'None'}</td>
                     <td className="py-3.5 px-6">
                       <span
-                        className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase border ${
+                        className={`stamp-badge ${
                           p.status === 'approved'
-                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800'
+                            ? 'bg-[#1F5A2E]/10 text-[#1F5A2E] border-[#1F5A2E]'
                             : p.status === 'pending'
-                            ? 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800'
-                            : 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-400 dark:border-rose-800'
+                            ? 'bg-[#C27D0E]/10 text-[#C27D0E] border-[#C27D0E]'
+                            : 'bg-[#8B1A1A]/10 text-[#8B1A1A] border-[#8B1A1A]'
                         }`}
                       >
                         {p.status}
@@ -237,7 +256,7 @@ export const AdminWorkspace: React.FC<AdminWorkspaceProps> = ({ currentUser, sho
                       {p.status !== 'approved' && (
                         <button
                           onClick={() => handleUpdateProfileStatus(p.user_id, 'approved')}
-                          className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold"
+                          className="neo-btn px-2.5 py-1 bg-[#1F5A2E] hover:bg-[#164423] text-white text-[11px]"
                         >
                           Approve
                         </button>
@@ -245,23 +264,23 @@ export const AdminWorkspace: React.FC<AdminWorkspaceProps> = ({ currentUser, sho
                       {p.status === 'pending' && (
                         <button
                           onClick={() => handleUpdateProfileStatus(p.user_id, 'rejected')}
-                          className="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-semibold"
+                          className="neo-btn px-2.5 py-1 bg-[#B84915] hover:bg-[#94380E] text-white text-[11px]"
                         >
-                          Revert / Reject
+                          Revert
                         </button>
                       )}
                       {p.status === 'approved' && (
                         <button
                           onClick={() => handleUpdateProfileStatus(p.user_id, 'blocked')}
-                          className="px-2.5 py-1 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-xs font-semibold"
+                          className="neo-btn px-2.5 py-1 bg-[#8B1A1A] hover:bg-[#6D1212] text-white text-[11px]"
                         >
-                          Block Access
+                          Block
                         </button>
                       )}
                       {p.status === 'blocked' && (
                         <button
                           onClick={() => handleUpdateProfileStatus(p.user_id, 'approved')}
-                          className="px-2.5 py-1 bg-slate-600 hover:bg-slate-700 text-white rounded-lg text-xs font-semibold"
+                          className="neo-btn px-2.5 py-1 bg-[#1A365D] text-white text-[11px]"
                         >
                           Unblock
                         </button>
@@ -277,62 +296,66 @@ export const AdminWorkspace: React.FC<AdminWorkspaceProps> = ({ currentUser, sho
 
       {/* Tab 2: Integrity & Security Ledger */}
       {activeTab === 'integrity' && (
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden">
-          <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
-            <h3 className="font-bold text-sm text-slate-900 dark:text-white">Security & Anti-Cheat Telemetry Ledger</h3>
-            <span className="text-xs text-slate-500">{integrityEvents.length} Recorded Incidents</span>
+        <div className="bg-white dark:bg-[#1D1814] border-2 border-[#1A1209] shadow-[4px_4px_0px_#1A1209] overflow-hidden">
+          <div className="p-4 bg-[#F4EFE6] dark:bg-[#26201B] border-b-2 border-[#1A1209] flex items-center justify-between font-mono">
+            <span className="font-bold text-xs uppercase text-[#1A1209] dark:text-white">
+              SECURITY & ANTI-CHEAT TELEMETRY LEDGER
+            </span>
+            <span className="stamp-badge bg-[#8B1A1A]/10 text-[#8B1A1A] border-[#8B1A1A]">
+              {integrityEvents.length} INCIDENTS
+            </span>
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs border-collapse">
+            <table className="w-full text-left text-xs border-collapse font-mono">
               <thead>
-                <tr className="bg-slate-50 dark:bg-slate-800/40 text-slate-500 uppercase border-b border-slate-200 dark:border-slate-800">
+                <tr className="bg-[#FAF6EE] dark:bg-[#26201B] text-[#1A1209] dark:text-[#D4C7B5] uppercase border-b-2 border-[#1A1209]">
                   <th className="py-3 px-6 font-bold">Timestamp</th>
-                  <th className="py-3 px-6 font-bold">Student</th>
+                  <th className="py-3 px-6 font-bold font-sans">Student</th>
                   <th className="py-3 px-6 font-bold">Roll No</th>
                   <th className="py-3 px-6 font-bold">Event Type</th>
                   <th className="py-3 px-6 font-bold">Severity</th>
                   <th className="py-3 px-6 font-bold">Telemetry Data</th>
                   <th className="py-3 px-6 font-bold">Review Status</th>
-                  <th className="py-3 px-6 font-bold text-right">Actions</th>
+                  <th className="py-3 px-6 font-bold text-right font-sans">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+              <tbody className="divide-y border-b border-[#1A1209]/20">
                 {integrityEvents.map((e) => (
-                  <tr key={e.id} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/40">
-                    <td className="py-3.5 px-6 font-mono text-slate-500">{new Date(e.timestamp).toLocaleString()}</td>
-                    <td className="py-3.5 px-6 font-bold text-slate-900 dark:text-white">{e.student_name || 'Student'}</td>
-                    <td className="py-3.5 px-6 font-mono font-semibold">{e.roll_number || '-'}</td>
-                    <td className="py-3.5 px-6 font-semibold text-rose-600 dark:text-rose-400 capitalize">
+                  <tr key={e.id} className="hover:bg-[#FAF6EE] dark:hover:bg-[#26201B] transition-colors">
+                    <td className="py-3.5 px-6 text-[#786958]">{new Date(e.timestamp).toLocaleTimeString()}</td>
+                    <td className="py-3.5 px-6 font-bold font-sans text-[#1A1209] dark:text-white">{e.student_name || 'Student'}</td>
+                    <td className="py-3.5 px-6 font-semibold">{e.roll_number || '-'}</td>
+                    <td className="py-3.5 px-6 font-semibold text-[#8B1A1A] capitalize">
                       {e.event_type.replace('_', ' ')}
                     </td>
                     <td className="py-3.5 px-6 uppercase font-bold text-[10px]">
                       <span
-                        className={`px-2 py-0.5 rounded ${
+                        className={`stamp-badge py-0 ${
                           e.severity === 'high'
-                            ? 'bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-400'
+                            ? 'bg-[#8B1A1A] text-white border-[#8B1A1A]'
                             : e.severity === 'medium'
-                            ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-400'
-                            : 'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-300'
+                            ? 'bg-[#C27D0E] text-white border-[#C27D0E]'
+                            : 'bg-[#F4EFE6] text-[#1A1209] border-[#1A1209]'
                         }`}
                       >
                         {e.severity}
                       </span>
                     </td>
-                    <td className="py-3.5 px-6 font-mono text-[10px] text-slate-500 max-w-[200px] truncate">
+                    <td className="py-3.5 px-6 text-[10px] text-[#5C4D3C] max-w-[200px] truncate">
                       {e.metadata_json}
                     </td>
                     <td className="py-3.5 px-6 capitalize font-semibold">{e.review_status}</td>
                     <td className="py-3.5 px-6 text-right space-x-2">
                       <button
                         onClick={() => handleReviewIntegrityEvent(e.id, 'dismissed')}
-                        className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded text-xs font-semibold"
+                        className="neo-btn px-2.5 py-1 bg-white dark:bg-[#1D1814] text-[#1A1209] dark:text-white text-[11px]"
                       >
                         Dismiss
                       </button>
                       <button
                         onClick={() => handleReviewIntegrityEvent(e.id, 'investigating')}
-                        className="px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 rounded text-xs font-semibold"
+                        className="neo-btn px-2.5 py-1 bg-[#1A365D] text-white text-[11px]"
                       >
                         Investigate
                       </button>
@@ -347,11 +370,14 @@ export const AdminWorkspace: React.FC<AdminWorkspaceProps> = ({ currentUser, sho
 
       {/* Tab 3: Institutional Grading Ledger */}
       {activeTab === 'ledger' && (
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm p-6 space-y-4">
-          <div className="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-800">
+        <div className="bg-white dark:bg-[#1D1814] border-2 border-[#1A1209] shadow-[4px_4px_0px_#1A1209] p-6 space-y-4">
+          <div className="flex items-center justify-between pb-4 border-b-2 border-[#1A1209]">
             <div>
-              <h3 className="font-bold text-base text-slate-900 dark:text-white">Institutional Grade Archive</h3>
-              <p className="text-xs text-slate-500">
+              <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-[#B84915] block mb-1">
+                IMMUTABLE AUDIT LOG // DIGITALLY SIGNED
+              </span>
+              <h3 className="font-extrabold text-lg text-[#1A1209] dark:text-white tracking-tight">Institutional Grade Archive.</h3>
+              <p className="text-xs font-mono text-[#5C4D3C] dark:text-[#B8A99A]">
                 Official institutional grade book with immutable digital signature hashes.
               </p>
             </div>
@@ -359,13 +385,13 @@ export const AdminWorkspace: React.FC<AdminWorkspaceProps> = ({ currentUser, sho
               href={api.exports.getGradingLedgerCsvUrl()}
               target="_blank"
               rel="noreferrer"
-              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold flex items-center gap-2 shadow-sm"
+              className="neo-btn px-4 py-2 bg-[#B84915] hover:bg-[#A03D0E] text-white text-xs flex items-center gap-2"
             >
-              <Download className="w-4 h-4" /> Download Complete CSV
+              <Download className="w-4 h-4" /> DOWNLOAD COMPLETE CSV →
             </a>
           </div>
 
-          <div className="p-4 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-200 dark:border-slate-700 text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+          <div className="p-4 bg-[#FAF6EE] dark:bg-[#26201B] border-2 border-[#1A1209] text-xs font-mono text-[#1A1209] dark:text-[#D4C7B5] leading-relaxed shadow-[2px_2px_0px_#1A1209]">
             All records in this ledger have been evaluated and digitally signed by authorized faculty. You can export the ledger in CSV or XLSX format for integration with university ERP systems or academic accreditation audits.
           </div>
         </div>

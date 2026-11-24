@@ -163,25 +163,25 @@ export const FacultyWorkspace: React.FC<FacultyWorkspaceProps> = ({ currentUser,
 
   if (activeSubmission) {
     return (
-      <div className="flex flex-col h-[calc(100vh-80px)] overflow-hidden bg-slate-100 dark:bg-slate-950">
+      <div className="flex flex-col h-[calc(100vh-80px)] overflow-hidden bg-[#FBF9F3] dark:bg-[#14110E]">
         {/* Top Evaluation Action Bar */}
-        <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-6 py-3 flex items-center justify-between shadow-sm z-20">
+        <div className="bg-white dark:bg-[#1D1814] border-b-2 border-[#1A1209] px-6 py-2.5 flex items-center justify-between shadow-sm z-20">
           <div className="flex items-center gap-4">
             <button
               onClick={() => setActiveSubmission(null)}
-              className="p-2 text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg flex items-center gap-1 text-sm font-semibold"
+              className="neo-btn px-3 py-1.5 bg-[#F4EFE6] dark:bg-[#26201B] text-[#1A1209] dark:text-[#F7F3E9] text-xs flex items-center gap-1.5"
             >
-              <ArrowLeft className="w-4 h-4" /> Back to Classroom Inbox
+              <ArrowLeft className="w-4 h-4" /> ← BACK TO INBOX
             </button>
-            <div className="h-5 w-px bg-slate-200 dark:bg-slate-800" />
+            <div className="h-5 w-0.5 bg-[#1A1209]" />
             <div>
-              <h2 className="text-sm font-bold text-slate-900 dark:text-white">
+              <h2 className="text-sm font-extrabold text-[#1A1209] dark:text-white tracking-tight">
                 {activeSubmission.title}
               </h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                Author: <span className="font-semibold">{activeSubmission.student_name}</span> • Roll:{' '}
-                <span className="font-mono">{activeSubmission.roll_number}</span> • Code:{' '}
-                <span className="font-mono text-indigo-600">{activeSubmission.submission_code}</span>
+              <p className="text-xs text-[#786958] dark:text-[#A89886] font-mono">
+                Author: <span className="font-bold text-[#1A1209] dark:text-white">{activeSubmission.student_name}</span> • Roll:{' '}
+                <span className="font-bold">{activeSubmission.roll_number}</span> • Code:{' '}
+                <span className="text-[#B84915] font-bold">{activeSubmission.submission_code}</span>
               </p>
             </div>
           </div>
@@ -191,15 +191,15 @@ export const FacultyWorkspace: React.FC<FacultyWorkspaceProps> = ({ currentUser,
               href={api.exports.getPdfUrl(activeSubmission.document_id)}
               target="_blank"
               rel="noreferrer"
-              className="px-3.5 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 hover:bg-slate-50 rounded-xl flex items-center gap-1.5 shadow-sm"
+              className="neo-btn px-3.5 py-1.5 bg-white dark:bg-[#1D1814] text-[#1A1209] dark:text-[#F7F3E9] text-xs flex items-center gap-1.5"
             >
-              <Download className="w-4 h-4 text-slate-500" /> PDF Copy
+              <Download className="w-4 h-4 text-[#B84915]" /> PDF Copy
             </a>
 
             {activeSubmission.status !== 'graded' && (
               <button
                 onClick={handleReturn}
-                className="px-3.5 py-1.5 text-xs font-semibold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 hover:bg-amber-100 rounded-xl flex items-center gap-1.5"
+                className="neo-btn px-3.5 py-1.5 bg-[#FFF5F5] dark:bg-[#2A1515] text-[#8B1A1A] border-[#8B1A1A] text-xs flex items-center gap-1.5"
               >
                 <RotateCcw className="w-4 h-4" /> Return for Corrections
               </button>
@@ -210,140 +210,145 @@ export const FacultyWorkspace: React.FC<FacultyWorkspaceProps> = ({ currentUser,
         {/* Split Screen Workspace */}
         <div className="flex-1 flex overflow-hidden">
           {/* Left Panel: Read-Only Student Document Preview */}
-          <div className="flex-1 overflow-y-auto p-8 bg-slate-200/50 dark:bg-slate-950 flex justify-center items-start">
-            <div className="w-[210mm] min-h-[297mm] bg-white text-slate-900 p-[20mm] shadow-xl rounded-sm border border-slate-300 font-sans">
+          <div className="flex-1 overflow-y-auto p-8 bg-[#ECE4D4] dark:bg-[#12100E] flex justify-center items-start">
+            <div className="w-[210mm] min-h-[297mm] bg-white text-[#1A1209] p-[20mm] border-2 border-[#1A1209] shadow-[6px_6px_0px_#1A1209] font-sans">
               {/* Cover Page */}
-              <div className="border-b-2 border-indigo-600 pb-4 mb-6 text-center">
-                <h1 className="text-lg font-extrabold uppercase text-slate-900">
+              <div className="border-b-2 border-[#1A1209] pb-4 mb-6 text-center">
+                <span className="font-mono text-[9px] uppercase tracking-widest text-[#B84915] font-bold block mb-1">
+                  OFFICIAL INSTITUTIONAL SUBMISSION RECORD // DISPATCH NO. {activeSubmission.submission_code}
+                </span>
+                <h1 className="text-lg font-extrabold uppercase tracking-tight text-[#1A1209]">
                   Imperial Institute of Engineering & Technology
                 </h1>
-                <p className="text-xs text-slate-500 uppercase tracking-widest mt-1">
+                <p className="text-xs text-[#5C4D3C] uppercase tracking-widest mt-1 font-mono">
                   Department of Computer Engineering • Academic Year 2026-27
                 </p>
               </div>
 
-              <table className="w-full text-xs border-collapse border border-slate-300 mb-6">
+              <table className="w-full text-xs border-collapse border-2 border-[#1A1209] mb-6 font-mono">
                 <tbody>
-                  <tr className="bg-slate-50">
-                    <td className="border border-slate-300 p-2 font-bold w-1/3">Class & Division</td>
-                    <td className="border border-slate-300 p-2">{`${activeSubmission.year_level} - ${activeSubmission.division_name}`}</td>
-                    <td className="border border-slate-300 p-2 font-bold w-1/3">Subject Code</td>
-                    <td className="border border-slate-300 p-2">{activeSubmission.subject_code}</td>
+                  <tr className="bg-[#FAF6EE]">
+                    <td className="border-2 border-[#1A1209] p-2 font-bold w-1/3">Class & Division</td>
+                    <td className="border-2 border-[#1A1209] p-2">{`${activeSubmission.year_level} - ${activeSubmission.division_name}`}</td>
+                    <td className="border-2 border-[#1A1209] p-2 font-bold w-1/3">Subject Code</td>
+                    <td className="border-2 border-[#1A1209] p-2">{activeSubmission.subject_code}</td>
                   </tr>
                   <tr>
-                    <td className="border border-slate-300 p-2 font-bold">Subject Name</td>
-                    <td className="border border-slate-300 p-2" colSpan={3}>{activeSubmission.subject_name}</td>
+                    <td className="border-2 border-[#1A1209] p-2 font-bold">Subject Name</td>
+                    <td className="border-2 border-[#1A1209] p-2 font-sans font-bold" colSpan={3}>{activeSubmission.subject_name}</td>
                   </tr>
-                  <tr className="bg-slate-50">
-                    <td className="border border-slate-300 p-2 font-bold">{activeSubmission.doc_type} No.</td>
-                    <td className="border border-slate-300 p-2">{activeSubmission.doc_number}</td>
-                    <td className="border border-slate-300 p-2 font-bold">Roll Number</td>
-                    <td className="border border-slate-300 p-2 font-mono font-bold">{activeSubmission.roll_number}</td>
+                  <tr className="bg-[#FAF6EE]">
+                    <td className="border-2 border-[#1A1209] p-2 font-bold">{activeSubmission.doc_type} No.</td>
+                    <td className="border-2 border-[#1A1209] p-2">{activeSubmission.doc_number}</td>
+                    <td className="border-2 border-[#1A1209] p-2 font-bold">Roll Number</td>
+                    <td className="border-2 border-[#1A1209] p-2 font-bold">{activeSubmission.roll_number}</td>
                   </tr>
                   <tr>
-                    <td className="border border-slate-300 p-2 font-bold">Submission Date</td>
-                    <td className="border border-slate-300 p-2">{activeSubmission.submission_date}</td>
-                    <td className="border border-slate-300 p-2 font-bold">Status</td>
-                    <td className="border border-slate-300 p-2 font-bold text-indigo-600 uppercase">
-                      {activeSubmission.status}
+                    <td className="border-2 border-[#1A1209] p-2 font-bold">Submission Date</td>
+                    <td className="border-2 border-[#1A1209] p-2">{activeSubmission.submission_date}</td>
+                    <td className="border-2 border-[#1A1209] p-2 font-bold">Status</td>
+                    <td className="border-2 border-[#1A1209] p-2 font-bold uppercase">
+                      <span className="stamp-badge py-0 bg-white text-[#1A1209]">
+                        {activeSubmission.status}
+                      </span>
                     </td>
                   </tr>
                 </tbody>
               </table>
 
               {/* Evaluation Rubric Matrix */}
-              <div className="mb-6">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">
+              <div className="mb-6 font-mono">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-[#1A1209] mb-2">
                   Evaluation Rubric Criteria Matrix ({isAssignment ? 'Max 10 Marks' : 'Max 15 Marks'})
                 </h3>
                 {isAssignment ? (
-                  <table className="w-full text-xs border-collapse border border-slate-300 text-center">
+                  <table className="w-full text-xs border-collapse border-2 border-[#1A1209] text-center">
                     <thead>
-                      <tr className="bg-slate-100 font-bold">
-                        <th className="border border-slate-300 p-2 text-left">Criteria</th>
-                        <th className="border border-slate-300 p-2">Below Exp.</th>
-                        <th className="border border-slate-300 p-2">Average</th>
-                        <th className="border border-slate-300 p-2">Good</th>
-                        <th className="border border-slate-300 p-2 w-16">Awarded</th>
+                      <tr className="bg-[#FAF6EE] font-bold border-b-2 border-[#1A1209]">
+                        <th className="border-2 border-[#1A1209] p-2 text-left font-sans">Criteria</th>
+                        <th className="border-2 border-[#1A1209] p-2">Below Exp.</th>
+                        <th className="border-2 border-[#1A1209] p-2">Average</th>
+                        <th className="border-2 border-[#1A1209] p-2">Good</th>
+                        <th className="border-2 border-[#1A1209] p-2 w-16">Awarded</th>
                       </tr>
                     </thead>
                     <tbody>
                       <tr>
-                        <td className="border border-slate-300 p-2 text-left font-semibold">Knowledge & Understanding (4)</td>
-                        <td className="border border-slate-300 p-2">2</td>
-                        <td className="border border-slate-300 p-2">3</td>
-                        <td className="border border-slate-300 p-2">4</td>
-                        <td className="border border-slate-300 p-2 font-bold text-indigo-600">{scoreK}</td>
+                        <td className="border-2 border-[#1A1209] p-2 text-left font-sans font-semibold">Knowledge & Understanding (4)</td>
+                        <td className="border-2 border-[#1A1209] p-2">2</td>
+                        <td className="border-2 border-[#1A1209] p-2">3</td>
+                        <td className="border-2 border-[#1A1209] p-2">4</td>
+                        <td className="border-2 border-[#1A1209] p-2 font-bold text-[#1F5A2E]">{scoreK}</td>
                       </tr>
                       <tr>
-                        <td className="border border-slate-300 p-2 text-left font-semibold">Content & Neatness (3)</td>
-                        <td className="border border-slate-300 p-2">1</td>
-                        <td className="border border-slate-300 p-2">2</td>
-                        <td className="border border-slate-300 p-2">3</td>
-                        <td className="border border-slate-300 p-2 font-bold text-indigo-600">{scoreC}</td>
+                        <td className="border-2 border-[#1A1209] p-2 text-left font-sans font-semibold">Content & Neatness (3)</td>
+                        <td className="border-2 border-[#1A1209] p-2">1</td>
+                        <td className="border-2 border-[#1A1209] p-2">2</td>
+                        <td className="border-2 border-[#1A1209] p-2">3</td>
+                        <td className="border-2 border-[#1A1209] p-2 font-bold text-[#1F5A2E]">{scoreC}</td>
                       </tr>
                       <tr>
-                        <td className="border border-slate-300 p-2 text-left font-semibold">Punctuality (3)</td>
-                        <td className="border border-slate-300 p-2">1</td>
-                        <td className="border border-slate-300 p-2">2</td>
-                        <td className="border border-slate-300 p-2">3</td>
-                        <td className="border border-slate-300 p-2 font-bold text-indigo-600">{scoreP}</td>
+                        <td className="border-2 border-[#1A1209] p-2 text-left font-sans font-semibold">Punctuality (3)</td>
+                        <td className="border-2 border-[#1A1209] p-2">1</td>
+                        <td className="border-2 border-[#1A1209] p-2">2</td>
+                        <td className="border-2 border-[#1A1209] p-2">3</td>
+                        <td className="border-2 border-[#1A1209] p-2 font-bold text-[#1F5A2E]">{scoreP}</td>
                       </tr>
-                      <tr className="bg-slate-50 font-bold">
-                        <td className="border border-slate-300 p-2 text-left" colSpan={4}>
+                      <tr className="bg-[#FAF6EE] font-bold border-t-2 border-[#1A1209]">
+                        <td className="border-2 border-[#1A1209] p-2 text-left font-sans" colSpan={4}>
                           TOTAL MARKS (10)
                         </td>
-                        <td className="border border-slate-300 p-2 text-base text-indigo-700">
+                        <td className="border-2 border-[#1A1209] p-2 text-base text-[#1F5A2E]">
                           {currentTotal}
                         </td>
                       </tr>
                     </tbody>
                   </table>
                 ) : (
-                  <table className="w-full text-xs border-collapse border border-slate-300 text-center">
+                  <table className="w-full text-xs border-collapse border-2 border-[#1A1209] text-center">
                     <thead>
-                      <tr className="bg-slate-100 font-bold">
-                        <th className="border border-slate-300 p-2 text-left">Criteria</th>
-                        <th className="border border-slate-300 p-2">Below Exp.</th>
-                        <th className="border border-slate-300 p-2">Average</th>
-                        <th className="border border-slate-300 p-2">Good</th>
-                        <th className="border border-slate-300 p-2 w-16">Awarded</th>
+                      <tr className="bg-[#FAF6EE] font-bold border-b-2 border-[#1A1209]">
+                        <th className="border-2 border-[#1A1209] p-2 text-left font-sans">Criteria</th>
+                        <th className="border-2 border-[#1A1209] p-2">Below Exp.</th>
+                        <th className="border-2 border-[#1A1209] p-2">Average</th>
+                        <th className="border-2 border-[#1A1209] p-2">Good</th>
+                        <th className="border-2 border-[#1A1209] p-2 w-16">Awarded</th>
                       </tr>
                     </thead>
                     <tbody>
                       <tr>
-                        <td className="border border-slate-300 p-2 text-left font-semibold">Knowledge & Theory (4)</td>
-                        <td className="border border-slate-300 p-2">2</td>
-                        <td className="border border-slate-300 p-2">3</td>
-                        <td className="border border-slate-300 p-2">4</td>
-                        <td className="border border-slate-300 p-2 font-bold text-indigo-600">{scoreK}</td>
+                        <td className="border-2 border-[#1A1209] p-2 text-left font-sans font-semibold">Knowledge & Theory (4)</td>
+                        <td className="border-2 border-[#1A1209] p-2">2</td>
+                        <td className="border-2 border-[#1A1209] p-2">3</td>
+                        <td className="border-2 border-[#1A1209] p-2">4</td>
+                        <td className="border-2 border-[#1A1209] p-2 font-bold text-[#1F5A2E]">{scoreK}</td>
                       </tr>
                       <tr>
-                        <td className="border border-slate-300 p-2 text-left font-semibold">Performance & Implementation (5)</td>
-                        <td className="border border-slate-300 p-2">2</td>
-                        <td className="border border-slate-300 p-2">3</td>
-                        <td className="border border-slate-300 p-2">5</td>
-                        <td className="border border-slate-300 p-2 font-bold text-indigo-600">{scorePerf}</td>
+                        <td className="border-2 border-[#1A1209] p-2 text-left font-sans font-semibold">Performance & Implementation (5)</td>
+                        <td className="border-2 border-[#1A1209] p-2">2</td>
+                        <td className="border-2 border-[#1A1209] p-2">3</td>
+                        <td className="border-2 border-[#1A1209] p-2">5</td>
+                        <td className="border-2 border-[#1A1209] p-2 font-bold text-[#1F5A2E]">{scorePerf}</td>
                       </tr>
                       <tr>
-                        <td className="border border-slate-300 p-2 text-left font-semibold">Content & Observations (3)</td>
-                        <td className="border border-slate-300 p-2">1</td>
-                        <td className="border border-slate-300 p-2">2</td>
-                        <td className="border border-slate-300 p-2">3</td>
-                        <td className="border border-slate-300 p-2 font-bold text-indigo-600">{scoreC}</td>
+                        <td className="border-2 border-[#1A1209] p-2 text-left font-sans font-semibold">Content & Observations (3)</td>
+                        <td className="border-2 border-[#1A1209] p-2">1</td>
+                        <td className="border-2 border-[#1A1209] p-2">2</td>
+                        <td className="border-2 border-[#1A1209] p-2">3</td>
+                        <td className="border-2 border-[#1A1209] p-2 font-bold text-[#1F5A2E]">{scoreC}</td>
                       </tr>
                       <tr>
-                        <td className="border border-slate-300 p-2 text-left font-semibold">Punctuality (3)</td>
-                        <td className="border border-slate-300 p-2">1</td>
-                        <td className="border border-slate-300 p-2">2</td>
-                        <td className="border border-slate-300 p-2">3</td>
-                        <td className="border border-slate-300 p-2 font-bold text-indigo-600">{scoreP}</td>
+                        <td className="border-2 border-[#1A1209] p-2 text-left font-sans font-semibold">Punctuality (3)</td>
+                        <td className="border-2 border-[#1A1209] p-2">1</td>
+                        <td className="border-2 border-[#1A1209] p-2">2</td>
+                        <td className="border-2 border-[#1A1209] p-2">3</td>
+                        <td className="border-2 border-[#1A1209] p-2 font-bold text-[#1F5A2E]">{scoreP}</td>
                       </tr>
-                      <tr className="bg-slate-50 font-bold">
-                        <td className="border border-slate-300 p-2 text-left" colSpan={4}>
+                      <tr className="bg-[#FAF6EE] font-bold border-t-2 border-[#1A1209]">
+                        <td className="border-2 border-[#1A1209] p-2 text-left font-sans" colSpan={4}>
                           TOTAL MARKS (15)
                         </td>
-                        <td className="border border-slate-300 p-2 text-base text-indigo-700">
+                        <td className="border-2 border-[#1A1209] p-2 text-base text-[#1F5A2E]">
                           {currentTotal}
                         </td>
                       </tr>
@@ -353,21 +358,21 @@ export const FacultyWorkspace: React.FC<FacultyWorkspaceProps> = ({ currentUser,
               </div>
 
               {/* Digital Verification & Stamp Block */}
-              <div className="border-t border-slate-300 pt-4 flex items-center justify-between text-xs text-slate-600 mb-6">
+              <div className="border-t-2 border-[#1A1209] pt-4 flex items-center justify-between text-xs text-[#5C4D3C] mb-6 font-mono">
                 <div>
                   <p>Digital Submission Verification Code:</p>
-                  <p className="font-mono font-bold text-slate-900">{activeSubmission.submission_code || 'PENDING SUBMISSION'}</p>
+                  <p className="font-bold text-[#1A1209]">{activeSubmission.submission_code || 'PENDING SUBMISSION'}</p>
                 </div>
                 <div className="text-right">
                   <p>Faculty Approval Signature:</p>
                   <div className="min-h-10 flex flex-col items-end justify-center">
                     {activeSubmission.status === 'graded' ? (
                       <>
-                        <span className="font-mono text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-300">
+                        <span className="stamp-badge bg-[#1F5A2E]/10 text-[#1F5A2E] border-[#1F5A2E] text-xs">
                           DIGITALLY VERIFIED
                         </span>
                         {activeSubmission.digital_signature_code && (
-                          <span className="text-[10px] text-slate-500 font-mono mt-0.5">
+                          <span className="text-[10px] text-[#5C4D3C] mt-0.5">
                             {activeSubmission.digital_signature_code}
                           </span>
                         )}
@@ -380,9 +385,9 @@ export const FacultyWorkspace: React.FC<FacultyWorkspaceProps> = ({ currentUser,
               </div>
 
               {/* Rendered Document Content */}
-              <div className="border-t-2 border-dashed border-slate-300 pt-6 mt-6">
+              <div className="border-t-2 border-dashed border-[#1A1209] pt-6 mt-6">
                 <div
-                  className="prose max-w-none text-slate-800 text-[11pt] leading-relaxed"
+                  className="prose max-w-none text-[#1A1209] text-[11pt] leading-relaxed"
                   dangerouslySetInnerHTML={{ __html: activeSubmission.snapshot_html || '' }}
                 />
               </div>
@@ -390,69 +395,63 @@ export const FacultyWorkspace: React.FC<FacultyWorkspaceProps> = ({ currentUser,
           </div>
 
           {/* Right Panel: Faculty Evaluation & Rubric Grading */}
-          <div className="w-[420px] bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 overflow-y-auto p-6 flex flex-col justify-between shadow-lg">
+          <div className="w-[420px] bg-white dark:bg-[#1D1814] border-l-2 border-[#1A1209] overflow-y-auto p-6 flex flex-col justify-between shadow-lg">
             <div>
-              <div className="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-800 mb-6">
+              <div className="flex items-center justify-between pb-3 border-b-2 border-[#1A1209] mb-5">
                 <div>
-                  <h3 className="text-base font-bold text-slate-900 dark:text-white">
-                    Rubric Evaluation Panel
+                  <span className="font-mono text-[9px] font-bold uppercase tracking-widest text-[#B84915] block">
+                    RUBRIC SCORING CONSOLE
+                  </span>
+                  <h3 className="text-base font-extrabold tracking-tight text-[#1A1209] dark:text-white">
+                    Evaluation Matrix.
                   </h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
-                    Maximum Permissible Score:{' '}
-                    <span className="font-bold text-indigo-600">{maxAllowed} Marks</span>
+                  <p className="text-xs font-mono text-[#786958]">
+                    Max Allowed: <span className="font-bold text-[#1A1209] dark:text-white">{maxAllowed} Marks</span>
                   </p>
                 </div>
-                {activeSubmission.status === 'graded' ? (
-                  <span className="px-3 py-1 bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 font-bold text-xs rounded-full border border-emerald-300 dark:border-emerald-800">
-                    GRADED
-                  </span>
-                ) : (
-                  <span className="px-3 py-1 bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 font-bold text-xs rounded-full border border-amber-300 dark:border-amber-800">
-                    PENDING
-                  </span>
-                )}
+                <span className={`stamp-badge ${activeSubmission.status === 'graded' ? 'bg-[#1F5A2E]/10 text-[#1F5A2E] border-[#1F5A2E]' : 'bg-[#C27D0E]/10 text-[#C27D0E] border-[#C27D0E]'}`}>
+                  {activeSubmission.status === 'graded' ? 'GRADED' : 'PENDING'}
+                </span>
               </div>
 
               {/* Cohort Similarity & Integrity Analysis */}
               {similarity && (
-                <div className="mb-6 p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 text-xs">
+                <div className="mb-5 p-3.5 border-2 border-[#1A1209] bg-[#FAF6EE] dark:bg-[#26201B] shadow-[3px_3px_0px_#1A1209] text-xs font-mono">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="font-bold text-slate-800 dark:text-slate-200 uppercase text-[11px] flex items-center gap-1.5">
-                      <ShieldCheck className="w-4 h-4 text-indigo-500" /> Cohort Similarity Scan
+                    <span className="font-bold text-[#1A1209] dark:text-white uppercase text-[10px] flex items-center gap-1.5">
+                      <ShieldCheck className="w-3.5 h-3.5 text-[#B84915]" /> COHORT SIMILARITY SCAN
                     </span>
                     <span
-                      className={`px-2 py-0.5 rounded-full font-extrabold text-[10px] uppercase border ${
+                      className={`stamp-badge py-0 text-[10px] font-bold ${
                         similarity.score > 35
-                          ? 'bg-rose-100 text-rose-800 border-rose-300 dark:bg-rose-950/60 dark:text-rose-400'
+                          ? 'bg-[#8B1A1A] text-white border-[#8B1A1A]'
                           : similarity.score > 15
-                          ? 'bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-950/60 dark:text-amber-400'
-                          : 'bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-950/60 dark:text-emerald-400'
+                          ? 'bg-[#C27D0E] text-white border-[#C27D0E]'
+                          : 'bg-[#1F5A2E] text-white border-[#1F5A2E]'
                       }`}
                     >
-                      {similarity.score}% Match
+                      {similarity.score}% MATCH
                     </span>
                   </div>
 
-                  <p className="text-[11px] text-slate-600 dark:text-slate-400 mb-2">
+                  <p className="text-[10px] text-[#5C4D3C] dark:text-[#B8A99A] mb-2 leading-relaxed">
                     {similarity.message}
                   </p>
 
                   {similarity.highest_match && (
-                    <div className="bg-white dark:bg-slate-900 p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 text-[11px] space-y-1">
-                      <p className="font-semibold text-slate-800 dark:text-slate-200">
-                        Highest Cohort Match: <span className="font-normal">{similarity.highest_match.matched_student_name} ({similarity.highest_match.matched_roll_number})</span>
+                    <div className="bg-white dark:bg-[#1D1814] p-2.5 border border-[#1A1209] text-[10px] space-y-1">
+                      <p className="font-bold text-[#1A1209] dark:text-white">
+                        Overlap: {similarity.highest_match.matched_student_name} ({similarity.highest_match.matched_roll_number})
                       </p>
-                      <p className="text-[10px] font-mono text-slate-500">
-                        Code: {similarity.highest_match.matched_submission_code}
+                      <p className="text-[9px] text-[#786958]">
+                        Ref Code: {similarity.highest_match.matched_submission_code}
                       </p>
                       {similarity.matching_excerpts && similarity.matching_excerpts.length > 0 && (
-                        <div className="mt-1 pt-1 border-t border-slate-100 dark:border-slate-800">
-                          <span className="text-[10px] font-semibold text-slate-500 block">Common Overlap Excerpts:</span>
-                          <ul className="list-disc pl-3 text-[10px] font-mono text-slate-600 dark:text-slate-400 space-y-0.5">
-                            {similarity.matching_excerpts.map((ex: string, i: number) => (
-                              <li key={i} className="truncate">"{ex}"</li>
-                            ))}
-                          </ul>
+                        <div className="mt-1 pt-1 border-t border-[#1A1209]/20">
+                          <span className="text-[9px] font-bold text-[#786958] block">Matched N-Gram Excerpt:</span>
+                          <p className="text-[9px] italic text-[#8B1A1A] truncate">
+                            "{similarity.matching_excerpts[0]}"
+                          </p>
                         </div>
                       )}
                     </div>
@@ -461,11 +460,11 @@ export const FacultyWorkspace: React.FC<FacultyWorkspaceProps> = ({ currentUser,
               )}
 
               {/* Rubric Inputs */}
-              <div className="space-y-4 mb-6">
+              <div className="space-y-3.5 mb-5 font-mono">
                 <div>
-                  <div className="flex justify-between text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                  <div className="flex justify-between text-xs font-bold text-[#1A1209] dark:text-[#D4C7B5] mb-1">
                     <span>1. Knowledge & Conceptual Theory</span>
-                    <span className="text-slate-500">Max: 4.0</span>
+                    <span className="text-[#786958]">Max: 4.0</span>
                   </div>
                   <input
                     type="number"
@@ -475,15 +474,15 @@ export const FacultyWorkspace: React.FC<FacultyWorkspaceProps> = ({ currentUser,
                     value={scoreK}
                     disabled={activeSubmission.status === 'graded'}
                     onChange={(e) => setScoreK(Number(e.target.value))}
-                    className="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl font-bold text-slate-900 dark:text-white"
+                    className="w-full px-3 py-2 text-sm bg-[#FFFAF1] dark:bg-[#26201B] border-2 border-[#1A1209] font-bold text-[#1A1209] dark:text-white focus:outline-none"
                   />
                 </div>
 
                 {!isAssignment && (
                   <div>
-                    <div className="flex justify-between text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                    <div className="flex justify-between text-xs font-bold text-[#1A1209] dark:text-[#D4C7B5] mb-1">
                       <span>2. Practical Implementation & Execution</span>
-                      <span className="text-slate-500">Max: 5.0</span>
+                      <span className="text-[#786958]">Max: 5.0</span>
                     </div>
                     <input
                       type="number"
@@ -493,15 +492,15 @@ export const FacultyWorkspace: React.FC<FacultyWorkspaceProps> = ({ currentUser,
                       value={scorePerf}
                       disabled={activeSubmission.status === 'graded'}
                       onChange={(e) => setScorePerf(Number(e.target.value))}
-                      className="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl font-bold text-slate-900 dark:text-white"
+                      className="w-full px-3 py-2 text-sm bg-[#FFFAF1] dark:bg-[#26201B] border-2 border-[#1A1209] font-bold text-[#1A1209] dark:text-white focus:outline-none"
                     />
                   </div>
                 )}
 
                 <div>
-                  <div className="flex justify-between text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                  <div className="flex justify-between text-xs font-bold text-[#1A1209] dark:text-[#D4C7B5] mb-1">
                     <span>{isAssignment ? '2. Content Structure & Neatness' : '3. Content & Observations'}</span>
-                    <span className="text-slate-500">Max: 3.0</span>
+                    <span className="text-[#786958]">Max: 3.0</span>
                   </div>
                   <input
                     type="number"
@@ -511,14 +510,14 @@ export const FacultyWorkspace: React.FC<FacultyWorkspaceProps> = ({ currentUser,
                     value={scoreC}
                     disabled={activeSubmission.status === 'graded'}
                     onChange={(e) => setScoreC(Number(e.target.value))}
-                    className="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl font-bold text-slate-900 dark:text-white"
+                    className="w-full px-3 py-2 text-sm bg-[#FFFAF1] dark:bg-[#26201B] border-2 border-[#1A1209] font-bold text-[#1A1209] dark:text-white focus:outline-none"
                   />
                 </div>
 
                 <div>
-                  <div className="flex justify-between text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                  <div className="flex justify-between text-xs font-bold text-[#1A1209] dark:text-[#D4C7B5] mb-1">
                     <span>{isAssignment ? '3. Academic Punctuality' : '4. Timeliness & Punctuality'}</span>
-                    <span className="text-slate-500">Max: 3.0</span>
+                    <span className="text-[#786958]">Max: 3.0</span>
                   </div>
                   <input
                     type="number"
@@ -528,24 +527,24 @@ export const FacultyWorkspace: React.FC<FacultyWorkspaceProps> = ({ currentUser,
                     value={scoreP}
                     disabled={activeSubmission.status === 'graded'}
                     onChange={(e) => setScoreP(Number(e.target.value))}
-                    className="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl font-bold text-slate-900 dark:text-white"
+                    className="w-full px-3 py-2 text-sm bg-[#FFFAF1] dark:bg-[#26201B] border-2 border-[#1A1209] font-bold text-[#1A1209] dark:text-white focus:outline-none"
                   />
                 </div>
 
                 {/* Calculated Total Box */}
-                <div className={`p-4 rounded-xl border flex items-center justify-between ${isScoreInvalid ? 'bg-rose-50 dark:bg-rose-950/30 border-rose-300 text-rose-700' : 'bg-indigo-50 dark:bg-indigo-950/40 border-indigo-200 text-indigo-900 dark:text-indigo-200'}`}>
+                <div className={`p-4 border-2 border-[#1A1209] shadow-[3px_3px_0px_#1A1209] flex items-center justify-between ${isScoreInvalid ? 'bg-[#FFF5F5] text-[#8B1A1A]' : 'bg-[#FAF6EE] dark:bg-[#26201B] text-[#1A1209] dark:text-white'}`}>
                   <div>
-                    <span className="text-xs uppercase font-bold tracking-wider block">Total Awarded Score</span>
-                    <span className="text-xs opacity-75">{isScoreInvalid ? `Exceeds max allowed (${maxAllowed})` : 'Calculated sum'}</span>
+                    <span className="text-xs uppercase font-bold tracking-wider block font-mono">Total Awarded Score</span>
+                    <span className="text-[10px] font-mono text-[#786958]">{isScoreInvalid ? `Exceeds max allowed (${maxAllowed})` : 'Calculated sum'}</span>
                   </div>
-                  <div className="text-2xl font-black">
-                    {currentTotal} <span className="text-sm font-semibold opacity-60">/ {maxAllowed}</span>
+                  <div className="text-2xl font-black font-mono">
+                    {currentTotal} <span className="text-sm font-bold opacity-60">/ {maxAllowed}</span>
                   </div>
                 </div>
 
                 {/* Qualitative Feedback */}
                 <div>
-                  <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1 block">
+                  <label className="text-xs font-bold font-mono uppercase tracking-wider text-[#1A1209] dark:text-[#D4C7B5] mb-1 block">
                     Faculty Remarks & Qualitative Feedback:
                   </label>
                   <textarea
@@ -554,19 +553,19 @@ export const FacultyWorkspace: React.FC<FacultyWorkspaceProps> = ({ currentUser,
                     disabled={activeSubmission.status === 'graded'}
                     onChange={(e) => setFeedback(e.target.value)}
                     placeholder="Enter detailed feedback on student write-up..."
-                    className="w-full p-2.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder:text-slate-400"
+                    className="w-full p-2.5 text-xs bg-[#FFFAF1] dark:bg-[#26201B] border-2 border-[#1A1209] text-[#1A1209] dark:text-white font-mono focus:outline-none"
                   />
                 </div>
               </div>
 
               {/* Digital Signature Verification Reference */}
               {activeSubmission.digital_signature_code && (
-                <div className="bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-300 dark:border-emerald-800 p-3 rounded-xl mb-4 text-xs">
-                  <div className="flex items-center gap-1.5 font-bold text-emerald-800 dark:text-emerald-300 mb-1">
-                    <ShieldCheck className="w-4 h-4 text-emerald-600" /> Digitally Signed & Approved
+                <div className="bg-[#FAF6EE] dark:bg-[#26201B] border-2 border-[#1F5A2E] p-3 mb-4 text-xs font-mono shadow-[2.5px_2.5px_0px_#1F5A2E]">
+                  <div className="flex items-center gap-1.5 font-bold text-[#1F5A2E] mb-1 uppercase">
+                    <ShieldCheck className="w-4 h-4 text-[#1F5A2E]" /> Digitally Signed & Approved
                   </div>
-                  <p className="font-mono text-emerald-900 dark:text-emerald-200 text-[10px] break-all">
-                    Verification Code: {activeSubmission.digital_signature_code}
+                  <p className="text-[#1A1209] dark:text-[#D4C7B5] text-[10px] break-all">
+                    Code: {activeSubmission.digital_signature_code}
                   </p>
                 </div>
               )}
@@ -577,9 +576,9 @@ export const FacultyWorkspace: React.FC<FacultyWorkspaceProps> = ({ currentUser,
               <button
                 onClick={handleApprove}
                 disabled={isScoreInvalid}
-                className="w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-bold text-sm rounded-xl shadow-lg shadow-indigo-600/25 flex items-center justify-center gap-2"
+                className="neo-btn w-full py-3.5 px-4 bg-[#B84915] hover:bg-[#A03D0E] disabled:opacity-50 text-white text-xs flex items-center justify-center gap-2 cursor-pointer"
               >
-                <Check className="w-4 h-4" /> Digitally Sign & Approve
+                <Check className="w-4 h-4" /> DIGITALLY SIGN & APPROVE →
               </button>
             )}
           </div>
@@ -589,14 +588,17 @@ export const FacultyWorkspace: React.FC<FacultyWorkspaceProps> = ({ currentUser,
   }
 
   return (
-    <div className="p-8 max-w-7xl mx-auto">
+    <div className="p-8 max-w-7xl mx-auto space-y-6">
       {/* Top Welcome Header */}
-      <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
+      <div className="flex flex-wrap items-center justify-between gap-4 p-6 bg-white dark:bg-[#1D1814] border-2 border-[#1A1209] shadow-[4px_4px_0px_#1A1209]">
         <div>
-          <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-            Faculty Evaluation Workspace
+          <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-[#B84915] block mb-1">
+            FACULTY ASSESSMENT DESK // DEPARTMENT OF COMPUTER ENGINEERING
+          </span>
+          <h1 className="text-2xl font-black text-[#1A1209] dark:text-white tracking-tight">
+            Classroom Evaluation Desk.
           </h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+          <p className="text-xs text-[#5C4D3C] dark:text-[#B8A99A] font-mono mt-1">
             Access organized classroom folders, review submissions with split-screen viewer, and apply digital evaluation stamps.
           </p>
         </div>
@@ -604,20 +606,20 @@ export const FacultyWorkspace: React.FC<FacultyWorkspaceProps> = ({ currentUser,
         {/* Filters */}
         <div className="flex items-center gap-3">
           <div className="relative">
-            <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
+            <Search className="w-4 h-4 absolute left-3 top-2.5 text-[#786958]" />
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search by student, roll no, or subject..."
-              className="pl-9 pr-4 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl w-64 focus:ring-2 focus:ring-indigo-500 text-slate-900 dark:text-white"
+              placeholder="Search student, roll, or subject..."
+              className="pl-9 pr-4 py-2 text-xs bg-[#FFFAF1] dark:bg-[#26201B] border-2 border-[#1A1209] font-mono w-64 text-[#1A1209] dark:text-white focus:outline-none"
             />
           </div>
 
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl font-semibold text-slate-700 dark:text-slate-300"
+            className="px-3 py-2 text-xs bg-[#FFFAF1] dark:bg-[#26201B] border-2 border-[#1A1209] font-mono font-bold text-[#1A1209] dark:text-white focus:outline-none"
           >
             <option value="">All Submissions</option>
             <option value="submitted">Pending Evaluation</option>
@@ -628,10 +630,10 @@ export const FacultyWorkspace: React.FC<FacultyWorkspaceProps> = ({ currentUser,
 
       {/* Classroom Folder View */}
       {Object.keys(classroomFolders).length === 0 ? (
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-12 text-center shadow-sm">
-          <Folder className="w-12 h-12 text-slate-400 mx-auto mb-3" />
-          <h3 className="text-base font-bold text-slate-800 dark:text-slate-200">No Student Submissions Found</h3>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+        <div className="bg-white dark:bg-[#1D1814] border-2 border-[#1A1209] p-12 text-center shadow-[4px_4px_0px_#1A1209]">
+          <Folder className="w-12 h-12 text-[#786958] mx-auto mb-3 opacity-50" />
+          <h3 className="text-base font-bold tracking-tight text-[#1A1209] dark:text-white">No Student Submissions Found.</h3>
+          <p className="text-xs font-mono text-[#786958] mt-1">
             Submissions submitted by students in your assigned subjects and divisions will appear here automatically.
           </p>
         </div>
@@ -642,28 +644,28 @@ export const FacultyWorkspace: React.FC<FacultyWorkspaceProps> = ({ currentUser,
             return (
               <div
                 key={className}
-                className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden"
+                className="bg-white dark:bg-[#1D1814] border-2 border-[#1A1209] shadow-[4px_4px_0px_#1A1209] overflow-hidden"
               >
                 {/* Folder Header */}
-                <div className="px-6 py-4 bg-slate-50/80 dark:bg-slate-800/40 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                <div className="px-6 py-4 bg-[#F4EFE6] dark:bg-[#26201B] border-b-2 border-[#1A1209] flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="p-2 bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 rounded-xl">
-                      <Folder className="w-5 h-5" />
+                    <div className="p-2 bg-[#1A365D] text-white border border-[#1A1209]">
+                      <Folder className="w-4 h-4" />
                     </div>
                     <div>
-                      <h3 className="font-bold text-sm text-slate-900 dark:text-white">{className}</h3>
-                      <p className="text-xs text-slate-500 dark:text-slate-400">Classroom Folder</p>
+                      <h3 className="font-bold text-sm text-[#1A1209] dark:text-white font-mono">{className}</h3>
+                      <p className="text-[10px] font-mono text-[#786958]">Classroom Folder</p>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-2">
                     {pendingCount > 0 && (
-                      <span className="px-3 py-1 bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-400 font-bold text-xs rounded-full border border-amber-300 dark:border-amber-800">
-                        {pendingCount} Requires Evaluation
+                      <span className="stamp-badge bg-[#C27D0E]/15 text-[#C27D0E] border-[#C27D0E]">
+                        {pendingCount} REQUIRES EVALUATION
                       </span>
                     )}
-                    <span className="px-3 py-1 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs rounded-full border border-slate-300 dark:border-slate-700">
-                      {subs.length} Total Submissions
+                    <span className="stamp-badge bg-white dark:bg-[#1D1814] text-[#1A1209] dark:text-white">
+                      {subs.length} TOTAL SUBMISSIONS
                     </span>
                   </div>
                 </div>
@@ -672,7 +674,7 @@ export const FacultyWorkspace: React.FC<FacultyWorkspaceProps> = ({ currentUser,
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-xs border-collapse">
                     <thead>
-                      <tr className="bg-slate-50/40 dark:bg-slate-800/20 text-slate-500 uppercase border-b border-slate-200 dark:border-slate-800">
+                      <tr className="bg-[#FAF6EE] dark:bg-[#26201B] text-[#1A1209] dark:text-[#D4C7B5] font-mono uppercase border-b-2 border-[#1A1209]">
                         <th className="py-3 px-6 font-bold">Student Name</th>
                         <th className="py-3 px-6 font-bold">Roll Number</th>
                         <th className="py-3 px-6 font-bold">Subject</th>
@@ -682,51 +684,51 @@ export const FacultyWorkspace: React.FC<FacultyWorkspaceProps> = ({ currentUser,
                         <th className="py-3 px-6 font-bold text-right">Actions</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                    <tbody className="divide-y border-b border-[#1A1209]/20 font-mono">
                       {subs.map((sub) => (
                         <tr
                           key={sub.submission_id}
-                          className="hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition-colors"
+                          className="hover:bg-[#FAF6EE] dark:hover:bg-[#26201B] transition-colors"
                         >
-                          <td className="py-3.5 px-6 font-bold text-slate-900 dark:text-white">
+                          <td className="py-3.5 px-6 font-bold font-sans text-[#1A1209] dark:text-white">
                             {sub.student_name}
                           </td>
-                          <td className="py-3.5 px-6 font-mono font-semibold text-slate-600 dark:text-slate-400">
+                          <td className="py-3.5 px-6 font-semibold text-[#5C4D3C] dark:text-[#B8A99A]">
                             {sub.roll_number}
                           </td>
-                          <td className="py-3.5 px-6 text-slate-700 dark:text-slate-300">
+                          <td className="py-3.5 px-6 text-[#5C4D3C] dark:text-[#B8A99A]">
                             {sub.subject_name}
                           </td>
-                          <td className="py-3.5 px-6 font-medium text-slate-900 dark:text-white">
+                          <td className="py-3.5 px-6 font-medium text-[#1A1209] dark:text-white">
                             {sub.title}
                           </td>
                           <td className="py-3.5 px-6">
                             {sub.status === 'graded' ? (
-                              <span className="inline-flex items-center gap-1 font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800 text-[11px]">
-                                <CheckCircle2 className="w-3 h-3" /> Graded
+                              <span className="stamp-badge bg-[#1F5A2E]/10 text-[#1F5A2E] border-[#1F5A2E]">
+                                <CheckCircle2 className="w-3 h-3 mr-1 inline" /> GRADED
                               </span>
                             ) : (
-                              <span className="inline-flex items-center gap-1 font-bold text-indigo-700 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/40 px-2.5 py-0.5 rounded-full border border-indigo-200 dark:border-indigo-800 text-[11px]">
-                                <Clock className="w-3 h-3" /> Pending Evaluation
+                              <span className="stamp-badge bg-[#C27D0E]/10 text-[#C27D0E] border-[#C27D0E]">
+                                <Clock className="w-3 h-3 mr-1 inline" /> PENDING
                               </span>
                             )}
                           </td>
-                          <td className="py-3.5 px-6 font-bold text-slate-900 dark:text-white">
+                          <td className="py-3.5 px-6 font-bold text-[#1A1209] dark:text-white">
                             {sub.marks_awarded !== undefined && sub.marks_awarded !== null ? (
-                              <span className="text-indigo-600 dark:text-indigo-400 font-extrabold text-sm">
+                              <span className="text-[#1F5A2E] dark:text-[#48BB78] font-bold text-sm">
                                 {sub.marks_awarded}
                               </span>
                             ) : (
-                              <span className="text-slate-400">-</span>
+                              <span className="text-[#786958]">-</span>
                             )}
                           </td>
                           <td className="py-3.5 px-6 text-right">
                             <button
                               onClick={() => openEvaluation(sub)}
-                              className="px-3.5 py-1.5 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-sm inline-flex items-center gap-1.5"
+                              className="neo-btn px-3.5 py-1.5 text-xs text-white bg-[#1A365D] hover:bg-[#12243F] inline-flex items-center gap-1.5"
                             >
                               <Eye className="w-3.5 h-3.5" />
-                              {sub.status === 'graded' ? 'View Evaluation' : 'Evaluate'}
+                              {sub.status === 'graded' ? 'VIEW' : 'EVALUATE'}
                             </button>
                           </td>
                         </tr>

@@ -60,12 +60,24 @@ export const App: React.FC = () => {
     }
   };
 
-  const showToast = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
+  const showToast = (message: any, type: 'success' | 'error' | 'info' = 'success') => {
+    let msgStr = 'Operation completed';
+    if (typeof message === 'string') {
+      msgStr = message;
+    } else if (message?.message) {
+      msgStr = String(message.message);
+    } else if (message?.detail) {
+      msgStr = typeof message.detail === 'string' ? message.detail : JSON.stringify(message.detail);
+    } else if (message !== null && typeof message === 'object') {
+      msgStr = JSON.stringify(message);
+    } else {
+      msgStr = String(message);
+    }
     const id = Math.random().toString();
-    setToasts((prev) => [...prev, { id, message, type }]);
+    setToasts((prev) => [...prev, { id, message: msgStr, type }]);
     setTimeout(() => {
       setToasts((prev) => prev.filter((t) => t.id !== id));
-    }, 3800);
+    }, 4000);
   };
 
   const loadCurrentUser = async () => {
@@ -162,24 +174,24 @@ export const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans flex flex-col transition-colors duration-200">
+    <div className="min-h-screen bg-[#FBF9F3] dark:bg-[#14110E] text-[#1A1209] dark:text-[#F7F3E9] font-sans flex flex-col transition-colors duration-200">
       {/* Toast Notification Container */}
       <div className="fixed top-20 right-6 z-50 flex flex-col gap-2 max-w-sm pointer-events-none">
         {toasts.map((t) => (
           <div
             key={t.id}
-            className={`pointer-events-auto p-4 rounded-2xl shadow-xl border text-xs font-semibold flex items-center justify-between gap-3 animate-in slide-in-from-right duration-200 ${
+            className={`pointer-events-auto p-3.5 border-2 border-[#1A1209] shadow-[3.5px_3.5px_0px_#1A1209] text-xs font-mono font-bold flex items-center justify-between gap-3 animate-in slide-in-from-right duration-150 ${
               t.type === 'success'
-                ? 'bg-emerald-900/90 text-white border-emerald-700'
+                ? 'bg-[#1F5A2E] text-white'
                 : t.type === 'error'
-                ? 'bg-rose-900/90 text-white border-rose-700'
-                : 'bg-slate-900/90 text-white border-slate-700'
+                ? 'bg-[#8B1A1A] text-white'
+                : 'bg-[#1A1209] text-white'
             }`}
           >
             <span>{t.message}</span>
             <button
               onClick={() => setToasts((prev) => prev.filter((x) => x.id !== t.id))}
-              className="text-white/60 hover:text-white"
+              className="text-white/70 hover:text-white"
             >
               <X className="w-3.5 h-3.5" />
             </button>
@@ -188,19 +200,19 @@ export const App: React.FC = () => {
       </div>
 
       {/* Main Navigation Header */}
-      <header className="sticky top-0 z-40 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-6 py-3 flex items-center justify-between">
+      <header className="sticky top-0 z-40 bg-white/95 dark:bg-[#1D1814]/95 backdrop-blur-sm border-b-2 border-[#1A1209] px-6 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center text-white font-black text-lg shadow-md shadow-indigo-600/20">
+          <div className="w-9 h-9 bg-[#1A1209] text-[#FBF9F3] border-2 border-[#1A1209] shadow-[2.5px_2.5px_0px_#B84915] flex items-center justify-center font-black text-lg select-none">
             W
           </div>
           <div>
-            <h1 className="text-base font-black tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
-              WriteUp <span className="text-indigo-600 dark:text-indigo-400">Pro</span>
-              <span className="text-[10px] font-bold uppercase tracking-wider bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 px-2 py-0.5 rounded-full border border-indigo-200 dark:border-indigo-800">
+            <h1 className="text-lg font-extrabold tracking-tight text-[#1A1209] dark:text-[#F7F3E9] flex items-center gap-2">
+              WriteUp <span className="text-[#B84915] dark:text-[#E0651E]">Pro</span>
+              <span className="stamp-badge bg-[#F4EFE6] dark:bg-[#26201B] text-[#1A1209] dark:text-[#F7F3E9]">
                 Enterprise v2.0
               </span>
             </h1>
-            <p className="text-[11px] text-slate-400 dark:text-slate-500 hidden sm:block">
+            <p className="text-[11px] font-medium text-[#786958] dark:text-[#A89886] hidden sm:block">
               Imperial Institute Academic Writing & Integrity Management
             </p>
           </div>
@@ -214,22 +226,24 @@ export const App: React.FC = () => {
               <div className="relative">
                 <button
                   onClick={() => setShowNotifications(!showNotifications)}
-                  className="p-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 relative"
+                  className="neo-btn p-2 bg-[#F4EFE6] dark:bg-[#26201B] text-[#1A1209] dark:text-[#F7F3E9] relative"
                   title="Notifications"
                 >
                   <Bell className="w-4 h-4" />
                   {unreadCount > 0 && (
-                    <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-rose-600 rounded-full" />
+                    <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-[#8B1A1A] border border-[#1A1209] rounded-none" />
                   )}
                 </button>
 
                 {showNotifications && (
-                  <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl p-4 z-50 animate-in fade-in zoom-in-95 duration-150">
-                    <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-800 mb-2">
-                      <span className="text-xs font-bold text-slate-800 dark:text-slate-200">Notifications</span>
+                  <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-[#1D1814] border-2 border-[#1A1209] shadow-[5px_5px_0px_#1A1209] p-4 z-50 animate-in fade-in zoom-in-95 duration-100">
+                    <div className="flex items-center justify-between pb-2 border-b-2 border-[#1A1209] mb-2 font-mono">
+                      <span className="text-xs font-bold text-[#1A1209] dark:text-[#F7F3E9] uppercase tracking-wider">
+                        DISPATCH LOG // {notifications.length}
+                      </span>
                       <button
                         onClick={handleMarkNotificationsRead}
-                        className="text-[10px] font-semibold text-indigo-600 dark:text-indigo-400 hover:underline"
+                        className="text-[10px] font-bold text-[#B84915] dark:text-[#E0651E] hover:underline uppercase"
                       >
                         Mark all read
                       </button>
@@ -237,19 +251,19 @@ export const App: React.FC = () => {
 
                     <div className="space-y-2 max-h-64 overflow-y-auto">
                       {notifications.length === 0 ? (
-                        <p className="text-xs text-slate-400 text-center py-4">No notifications yet.</p>
+                        <p className="text-xs font-mono text-[#786958] text-center py-4">No new dispatches.</p>
                       ) : (
                         notifications.map((n) => (
                           <div
                             key={n.id}
-                            className={`p-2.5 rounded-xl text-xs border ${
+                            className={`p-2.5 text-xs border border-[#1A1209] ${
                               n.is_read
-                                ? 'bg-slate-50 dark:bg-slate-800/40 border-slate-100 dark:border-slate-800 text-slate-500'
-                                : 'bg-indigo-50/50 dark:bg-indigo-950/30 border-indigo-200 dark:border-indigo-800 text-slate-900 dark:text-slate-200 font-medium'
+                                ? 'bg-[#F4EFE6] dark:bg-[#26201B] text-[#786958]'
+                                : 'bg-[#FFF9EE] dark:bg-[#332B24] border-[#1A1209] text-[#1A1209] dark:text-[#F7F3E9] font-medium'
                             }`}
                           >
-                            <p className="font-bold text-[11px] mb-0.5">{n.title}</p>
-                            <p className="text-[10px] opacity-80 leading-relaxed">{n.message}</p>
+                            <p className="font-bold text-[11px] mb-0.5 font-mono">{n.title}</p>
+                            <p className="text-[10px] leading-relaxed">{n.message}</p>
                           </div>
                         ))
                       )}
@@ -259,23 +273,23 @@ export const App: React.FC = () => {
               </div>
 
               {/* User Profile Pill */}
-              <div className="flex items-center gap-2 pl-2 border-l border-slate-200 dark:border-slate-800">
-                <div className="w-8 h-8 rounded-full bg-indigo-600 text-white font-bold flex items-center justify-center text-xs">
+              <div className="flex items-center gap-2 pl-3 border-l-2 border-[#1A1209]">
+                <div className="w-8 h-8 bg-[#1A365D] text-white font-bold flex items-center justify-center text-xs border border-[#1A1209]">
                   {currentUser.full_name.charAt(0)}
                 </div>
                 <div className="hidden md:block text-left">
-                  <p className="text-xs font-bold text-slate-900 dark:text-white leading-tight">
+                  <p className="text-xs font-bold text-[#1A1209] dark:text-white leading-tight">
                     {currentUser.full_name}
                   </p>
-                  <p className="text-[10px] font-semibold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">
+                  <span className="stamp-badge py-0 text-[9px] bg-[#F4EFE6] dark:bg-[#26201B] text-[#1A1209] dark:text-[#D4C7B5]">
                     {currentUser.role}
-                  </p>
+                  </span>
                 </div>
               </div>
 
               <button
                 onClick={handleLogout}
-                className="p-2 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors"
+                className="neo-btn p-2 bg-[#F4EFE6] dark:bg-[#26201B] hover:bg-[#8B1A1A] hover:text-white text-[#1A1209] dark:text-[#F7F3E9] transition-colors"
                 title="Logout"
               >
                 <LogOut className="w-4 h-4" />
@@ -286,7 +300,7 @@ export const App: React.FC = () => {
           {/* Theme Switcher */}
           <button
             onClick={toggleDarkMode}
-            className="p-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors"
+            className="neo-btn p-2 bg-[#F4EFE6] dark:bg-[#26201B] text-[#1A1209] dark:text-[#F7F3E9]"
             title="Toggle Light/Dark Theme"
           >
             {isDarkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4" />}
@@ -298,31 +312,31 @@ export const App: React.FC = () => {
       <main className="flex-1">
         {!currentUser ? (
           /* Authentication Screen with Jury Testing Panel */
-          <div className="max-w-md mx-auto my-12 p-8 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl">
+          <div className="max-w-md mx-auto my-12 p-8 bg-white dark:bg-[#1D1814] border-2 border-[#1A1209] shadow-[6px_6px_0px_#1A1209]">
             {/* Jury Quick Test Actions */}
-            <div className="bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 rounded-2xl p-4 mb-6">
-              <span className="text-[11px] font-extrabold uppercase tracking-widest text-indigo-700 dark:text-indigo-300 block mb-2">
+            <div className="bg-[#F4EFE6] dark:bg-[#26201B] border-2 border-[#1A1209] p-3.5 mb-6 shadow-[3px_3px_0px_#1A1209]">
+              <span className="font-mono text-[10px] font-bold tracking-widest text-[#B84915] uppercase block mb-2">
                 ⚡ Quick Role Evaluation (Password: password)
               </span>
               <div className="grid grid-cols-3 gap-2">
                 <button
                   type="button"
                   onClick={() => handleQuickLogin('student')}
-                  className="px-2 py-2 bg-white dark:bg-slate-800 hover:bg-indigo-600 hover:text-white text-indigo-900 dark:text-indigo-200 rounded-xl font-bold text-xs shadow-sm border border-indigo-200 dark:border-indigo-700 transition-all text-center"
+                  className="neo-btn py-2 px-2 bg-white dark:bg-[#1D1814] text-[#1A1209] dark:text-[#F7F3E9] text-xs hover:bg-[#B84915] hover:text-white"
                 >
                   Student
                 </button>
                 <button
                   type="button"
                   onClick={() => handleQuickLogin('faculty')}
-                  className="px-2 py-2 bg-white dark:bg-slate-800 hover:bg-indigo-600 hover:text-white text-indigo-900 dark:text-indigo-200 rounded-xl font-bold text-xs shadow-sm border border-indigo-200 dark:border-indigo-700 transition-all text-center"
+                  className="neo-btn py-2 px-2 bg-white dark:bg-[#1D1814] text-[#1A1209] dark:text-[#F7F3E9] text-xs hover:bg-[#B84915] hover:text-white"
                 >
                   Faculty
                 </button>
                 <button
                   type="button"
                   onClick={() => handleQuickLogin('admin')}
-                  className="px-2 py-2 bg-white dark:bg-slate-800 hover:bg-indigo-600 hover:text-white text-indigo-900 dark:text-indigo-200 rounded-xl font-bold text-xs shadow-sm border border-indigo-200 dark:border-indigo-700 transition-all text-center"
+                  className="neo-btn py-2 px-2 bg-white dark:bg-[#1D1814] text-[#1A1209] dark:text-[#F7F3E9] text-xs hover:bg-[#B84915] hover:text-white"
                 >
                   Admin
                 </button>
@@ -330,11 +344,14 @@ export const App: React.FC = () => {
             </div>
 
             <div className="text-center mb-6">
-              <h2 className="text-xl font-black text-slate-900 dark:text-white">
-                {isRegister ? 'Register Account' : 'Sign in to WriteUp Pro'}
+              <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-[#786958] dark:text-[#A89886] block mb-1">
+                INSTITUTIONAL GATEWAY // AUTHORIZED ACCESS
+              </span>
+              <h2 className="text-xl font-bold tracking-tight text-[#1A1209] dark:text-white">
+                {isRegister ? 'Register Academic Account' : 'Sign in to WriteUp Pro'}
               </h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                Enter your credentials to access the academic workspace.
+              <p className="text-xs text-[#5C4D3C] dark:text-[#B8A99A] mt-1 font-mono">
+                Enter your credentials to access the academic writing workspace.
               </p>
             </div>
 
@@ -342,8 +359,8 @@ export const App: React.FC = () => {
               {isRegister && (
                 <>
                   <div>
-                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
-                      Full Name
+                    <label className="font-mono text-[11px] font-bold uppercase tracking-wider text-[#1A1209] dark:text-[#D4C7B5] block mb-1">
+                      Full Name:
                     </label>
                     <input
                       type="text"
@@ -351,30 +368,30 @@ export const App: React.FC = () => {
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
                       placeholder="e.g. John Doe"
-                      className="w-full px-4 py-2.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white"
+                      className="w-full px-3.5 py-2.5 text-xs bg-[#FFFAF1] dark:bg-[#26201B] border-2 border-[#1A1209] text-[#1A1209] dark:text-white font-mono focus:outline-none focus:ring-2 focus:ring-[#B84915]"
                     />
                   </div>
                   <div>
-                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
-                      Institutional Email
+                    <label className="font-mono text-[11px] font-bold uppercase tracking-wider text-[#1A1209] dark:text-[#D4C7B5] block mb-1">
+                      Institutional Email:
                     </label>
                     <input
                       type="email"
                       required
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      placeholder="student@writeuppro.edu"
-                      className="w-full px-4 py-2.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white"
+                      placeholder="student@iiet.ac.in"
+                      className="w-full px-3.5 py-2.5 text-xs bg-[#FFFAF1] dark:bg-[#26201B] border-2 border-[#1A1209] text-[#1A1209] dark:text-white font-mono focus:outline-none focus:ring-2 focus:ring-[#B84915]"
                     />
                   </div>
                   <div>
-                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
-                      Account Role
+                    <label className="font-mono text-[11px] font-bold uppercase tracking-wider text-[#1A1209] dark:text-[#D4C7B5] block mb-1">
+                      Account Role:
                     </label>
                     <select
                       value={role}
                       onChange={(e) => setRole(e.target.value as any)}
-                      className="w-full px-4 py-2.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-semibold"
+                      className="w-full px-3.5 py-2.5 text-xs bg-[#FFFAF1] dark:bg-[#26201B] border-2 border-[#1A1209] text-[#1A1209] dark:text-white font-mono font-bold focus:outline-none"
                     >
                       <option value="student">Student</option>
                       <option value="faculty">Faculty</option>
@@ -384,8 +401,8 @@ export const App: React.FC = () => {
               )}
 
               <div>
-                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
-                  Username
+                <label className="font-mono text-[11px] font-bold uppercase tracking-wider text-[#1A1209] dark:text-[#D4C7B5] block mb-1">
+                  Username:
                 </label>
                 <input
                   type="text"
@@ -393,13 +410,13 @@ export const App: React.FC = () => {
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   placeholder="admin, faculty, or student"
-                  className="w-full px-4 py-2.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white"
+                  className="w-full px-3.5 py-2.5 text-xs bg-[#FFFAF1] dark:bg-[#26201B] border-2 border-[#1A1209] text-[#1A1209] dark:text-white font-mono focus:outline-none focus:ring-2 focus:ring-[#B84915]"
                 />
               </div>
 
               <div>
-                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
-                  Password
+                <label className="font-mono text-[11px] font-bold uppercase tracking-wider text-[#1A1209] dark:text-[#D4C7B5] block mb-1">
+                  Password:
                 </label>
                 <input
                   type="password"
@@ -407,26 +424,27 @@ export const App: React.FC = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Enter your password"
-                  className="w-full px-4 py-2.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white"
+                  className="w-full px-3.5 py-2.5 text-xs bg-[#FFFAF1] dark:bg-[#26201B] border-2 border-[#1A1209] text-[#1A1209] dark:text-white font-mono focus:outline-none focus:ring-2 focus:ring-[#B84915]"
                 />
               </div>
 
               <button
                 type="submit"
                 disabled={authLoading}
-                className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-lg shadow-indigo-600/25 mt-2 transition-transform active:scale-[0.98]"
+                className="neo-btn w-full py-3 bg-[#B84915] hover:bg-[#A03D0E] text-[#FBF9F3] text-xs mt-3 flex items-center justify-center gap-2 group cursor-pointer"
               >
-                {authLoading ? 'Verifying...' : isRegister ? 'Create Account' : 'Sign In'}
+                <span>{authLoading ? 'VERIFYING CREDENTIALS...' : isRegister ? 'CREATE ACADEMIC ACCOUNT' : 'ENTER WORKSPACE'}</span>
+                <span className="group-hover:translate-x-1 transition-transform">→</span>
               </button>
             </form>
 
-            <div className="text-center mt-6">
+            <div className="text-center mt-6 pt-4 border-t border-[#1A1209]/20 font-mono">
               <button
                 type="button"
                 onClick={() => setIsRegister(!isRegister)}
-                className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:underline"
+                className="text-xs font-bold text-[#B84915] dark:text-[#E0651E] hover:underline"
               >
-                {isRegister ? 'Already have an account? Sign in' : "Don't have an account? Register"}
+                {isRegister ? '← Already registered? Sign in here' : "Need an account? Register new profile →"}
               </button>
             </div>
           </div>

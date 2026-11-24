@@ -2,29 +2,147 @@
 
 :root {
   --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  /* Clean Academic Palette with Tactile Borders */
+  --paper-bg: #FBF9F3;
+  --paper-card: #FFFFFF;
+  --paper-panel: #F4EFE6;
+  --paper-subtle: #ECE4D4;
+  --ink-primary: #1A1209;
+  --ink-secondary: #4A3E31;
+  --ink-muted: #786958;
+
+  --saffron-deep: #B84915;
+  --saffron: #E0651E;
+  --gazette-green: #1F5A2E;
+  --gazette-crimson: #8B1A1A;
+  --oxford-navy: #1A365D;
+}
+
+.dark {
+  --paper-bg: #14110E;
+  --paper-card: #1D1814;
+  --paper-panel: #26201B;
+  --paper-subtle: #332B24;
+  --ink-primary: #F7F3E9;
+  --ink-secondary: #D4C7B5;
+  --ink-muted: #8F8171;
+
+  --saffron-deep: #E0651E;
+  --saffron: #F0823A;
+  --gazette-green: #2E8540;
+  --gazette-crimson: #C53030;
+  --oxford-navy: #3182CE;
 }
 
 body {
   margin: 0;
   font-family: var(--font-sans);
+  background-color: var(--paper-bg);
+  color: var(--ink-primary);
   -webkit-font-smoothing: antialiased;
 }
 
-/* Custom Scrollbars */
+/* Tactile Micro-Interactions */
+.neo-box {
+  background-color: var(--paper-card);
+  border: 2px solid #1A1209;
+  box-shadow: 4px 4px 0px #1A1209;
+}
+
+.dark .neo-box {
+  background-color: #1D1814;
+  border: 2px solid #D4C7B5;
+  box-shadow: 4px 4px 0px #000000;
+}
+
+.neo-box-sm {
+  background-color: var(--paper-card);
+  border: 1.5px solid #1A1209;
+  box-shadow: 2.5px 2.5px 0px #1A1209;
+}
+
+.dark .neo-box-sm {
+  background-color: #1D1814;
+  border: 1.5px solid #D4C7B5;
+  box-shadow: 2.5px 2.5px 0px #000000;
+}
+
+.neo-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-sans);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  border: 2px solid #1A1209;
+  box-shadow: 3px 3px 0px #1A1209;
+  transition: all 0.12s ease-in-out;
+  cursor: pointer;
+}
+
+.neo-btn:hover {
+  transform: translate(1.5px, 1.5px);
+  box-shadow: 1.5px 1.5px 0px #1A1209;
+}
+
+.neo-btn:active {
+  transform: translate(3px, 3px);
+  box-shadow: 0px 0px 0px #1A1209;
+}
+
+.dark .neo-btn {
+  border: 2px solid #D4C7B5;
+  box-shadow: 3px 3px 0px #000000;
+}
+
+.dark .neo-btn:hover {
+  transform: translate(1.5px, 1.5px);
+  box-shadow: 1.5px 1.5px 0px #000000;
+}
+
+.dark .neo-btn:active {
+  transform: translate(3px, 3px);
+  box-shadow: 0px 0px 0px #000000;
+}
+
+/* Stamped Metadata Badge */
+.stamp-badge {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  border: 1px solid #1A1209;
+  box-shadow: 1.5px 1.5px 0px #1A1209;
+  padding: 2px 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.dark .stamp-badge {
+  border: 1px solid #D4C7B5;
+  box-shadow: 1.5px 1.5px 0px #000000;
+}
+
+/* Custom Academic Scrollbars */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 7px;
+  height: 7px;
 }
 
 ::-webkit-scrollbar-track {
-  background: transparent;
+  background: var(--paper-panel);
+  border-left: 1px solid rgba(26, 18, 9, 0.15);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(148, 163, 184, 0.4);
-  border-radius: 9999px;
+  background: var(--ink-muted);
+  border: 1px solid #1A1209;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(100, 116, 139, 0.7);
+  background: var(--ink-secondary);
 }
