@@ -1,16 +1,17 @@
 
+
 <div align="center">
 
 # WriteUp Pro — Smart Academic Writing & Evaluation Platform 📝✨
 
-[🚀 OPEN LIVE APPLICATION]([https://writeuppro-antipaste.vercel.app])
+[![🚀 OPEN LIVE APPLICATION](https://img.shields.io/badge/🚀_OPEN_LIVE_APPLICATION-Visit_Website-blue?style=for-the-badge)](https://writeuppro-antipaste.vercel.app)
 
-[![FastAPI](https://img.shields.io/badge/Backend-FastAPI%200.165-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
-[![React](https://img.shields.io/badge/Frontend-React%2019%20%2B%20TypeScript-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev)
-[![TailwindCSS](https://img.shields.io/badge/UI-Tailwind%20CSS%20v4-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com)
-[![SQLite](https://img.shields.io/badge/Database-SQLite%20%2F%20PostgreSQL-003B57?style=for-the-badge&logo=sqlite&logoColor=white)](https://sqlite.org)
-[![Docker](https://img.shields.io/badge/Deployment-Docker%20%26%20Compose-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com)
-[![Pytest](https://img.shields.io/badge/Testing-Pytest%20Suite%20100%25-0A9EDC?style=for-the-badge&logo=pytest&logoColor=white)](https://pytest.org)
+### A Smart Academic Workspace
+
+[![FastAPI](https://img.shields.io/badge/Backend-FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
+[![React](https://img.shields.io/badge/Frontend-React%2019-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev)
+[![TailwindCSS](https://img.shields.io/badge/UI-Tailwind%20CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com)
+
 </div>
 
 **WriteUp Pro** is a modern, enterprise-grade academic productivity, document authoring, academic integrity monitoring, submission management, faculty evaluation, and institutional administration platform. 
