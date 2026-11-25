@@ -25,6 +25,8 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
   showToast,
 }) => {
   const [doc, setDoc] = useState<AcademicDocument | null>(null);
+  const [docLoading, setDocLoading] = useState<boolean>(Boolean(docId));
+  const [docError, setDocError] = useState<string | null>(null);
   const [title, setTitle] = useState('');
   const [docType, setDocType] = useState<'Assignment' | 'Experiment'>('Assignment');
   const [subject, setSubject] = useState('');
@@ -77,22 +79,37 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
 
   const loadDocument = async (id: string) => {
     try {
+      setDocLoading(true);
+      setDocError(null);
       const data = await api.documents.getDocument(id);
       setDoc(data);
-      setTitle(data.title);
-      setDocType(data.doc_type);
-      setSubject(data.subject_name);
-      setSubjectCode(data.subject_code);
-      setDocNumber(data.doc_number);
-      setWordCount(data.word_count);
+      setTitle(data.title || '');
+      setDocType(data.doc_type || 'Assignment');
+      setSubject(data.subject_name || '');
+      setSubjectCode(data.subject_code || '');
+      setDocNumber(data.doc_number || '1');
+      setWordCount(data.word_count || 0);
       setVersions(data.versions || []);
       if (editorRef.current) {
-        editorRef.current.innerHTML = data.content_html;
+        editorRef.current.innerHTML = data.content_html || '<p></p>';
       }
       setHasUnsavedChanges(false);
     } catch (err: any) {
+      setDocError(err.message || 'Failed to retrieve document.');
       showToast(err.message || 'Failed to load document', 'error');
+    } finally {
+      setDocLoading(false);
     }
+  };
+
+  const handleSafeBack = () => {
+    if (hasUnsavedChanges && !isReadOnly) {
+      const confirmLeave = window.confirm(
+        'You have unsaved changes in this document. Are you sure you want to return to the dossier?'
+      );
+      if (!confirmLeave) return;
+    }
+    onBack();
   };
 
   const handleRestoreVersion = async (versionNum: number) => {
@@ -341,7 +358,7 @@ public class AcademicAlgorithm {
       <div className="bg-white dark:bg-[#1D1814] border-b-2 border-[#1A1209] px-6 py-2.5 flex items-center justify-between shadow-sm z-20">
         <div className="flex items-center gap-4">
           <button
-            onClick={onBack}
+            onClick={handleSafeBack}
             className="neo-btn px-3 py-1.5 bg-[#F4EFE6] dark:bg-[#26201B] text-[#1A1209] dark:text-[#F7F3E9] text-xs flex items-center gap-1.5"
           >
             <ArrowLeft className="w-4 h-4" /> ← BACK TO DOSSIER
@@ -397,14 +414,21 @@ public class AcademicAlgorithm {
               <span className="stamp-badge bg-[#1F5A2E]/10 text-[#1F5A2E] border-[#1F5A2E]">
                 {doc?.status}
               </span>
-              <a
-                href={api.exports.getPdfUrl(doc?.id || '')}
-                target="_blank"
-                rel="noreferrer"
+              <button
+                onClick={async () => {
+                  if (!doc?.id) return;
+                  try {
+                    showToast('Generating signed academic PDF...', 'info');
+                    await api.exports.downloadPdf(doc.id, title);
+                    showToast('PDF downloaded successfully.', 'success');
+                  } catch (err: any) {
+                    showToast(err.message || 'Failed to download PDF', 'error');
+                  }
+                }}
                 className="neo-btn px-4 py-1.5 text-xs bg-[#1A365D] hover:bg-[#12243F] text-white flex items-center gap-1.5"
               >
                 <Download className="w-4 h-4" /> Download PDF
-              </a>
+              </button>
             </div>
           )}
         </div>
@@ -534,12 +558,57 @@ public class AcademicAlgorithm {
         </div>
       )}
 
-      {/* Editor Main Canvas - Scrollable A4 View */}
-      <div className="flex-1 overflow-y-auto p-8 flex justify-center items-start">
-        <div
-          style={{ transform: `scale(${zoom})`, transformOrigin: 'top center' }}
-          className="transition-transform duration-150 ease-out flex flex-col gap-6"
-        >
+      {docLoading ? (
+        <div className="flex-1 flex items-center justify-center p-12">
+          <div className="max-w-md w-full bg-white dark:bg-[#1D1814] border-2 border-[#1A1209] shadow-[5px_5px_0px_#1A1209] p-8 text-center space-y-4 font-mono">
+            <div className="w-8 h-8 border-4 border-[#1A1209] border-t-[#B84915] animate-spin mx-auto" />
+            <span className="text-[10px] font-bold uppercase tracking-widest text-[#B84915] block">
+              ACADEMIC DOSSIER // RETRIEVING MANUSCRIPT
+            </span>
+            <p className="text-sm font-bold text-[#1A1209] dark:text-white font-sans">
+              Loading Manuscript Content...
+            </p>
+            <p className="text-xs text-[#786958]">
+              Verifying document snapshot and version ledger.
+            </p>
+          </div>
+        </div>
+      ) : docError ? (
+        <div className="flex-1 flex items-center justify-center p-12">
+          <div className="max-w-md w-full bg-white dark:bg-[#1D1814] border-2 border-[#8B1A1A] shadow-[5px_5px_0px_#8B1A1A] p-8 text-center space-y-4 font-mono">
+            <ShieldAlert className="w-10 h-10 text-[#8B1A1A] mx-auto" />
+            <span className="text-[10px] font-bold uppercase tracking-widest text-[#8B1A1A] block">
+              RETRIEVAL EXCEPTION // ACCESS INTERRUPTED
+            </span>
+            <p className="text-sm font-bold text-[#1A1209] dark:text-white font-sans">
+              Unable to Retrieve Document
+            </p>
+            <p className="text-xs text-[#8B1A1A] bg-[#FFF5F5] dark:bg-[#2A1515] p-2 border border-[#8B1A1A]">
+              {docError}
+            </p>
+            <div className="flex gap-2 pt-2">
+              <button
+                onClick={() => docId && loadDocument(docId)}
+                className="neo-btn flex-1 py-2 bg-[#B84915] hover:bg-[#A03D0E] text-white text-xs"
+              >
+                Retry Retrieval
+              </button>
+              <button
+                onClick={handleSafeBack}
+                className="neo-btn flex-1 py-2 bg-[#F4EFE6] dark:bg-[#26201B] text-[#1A1209] dark:text-white text-xs"
+              >
+                Return to Dossier
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : (
+        /* Editor Main Canvas - Scrollable A4 View */
+        <div className="flex-1 overflow-y-auto p-8 flex justify-center items-start">
+          <div
+            style={{ transform: `scale(${zoom})`, transformOrigin: 'top center' }}
+            className="transition-transform duration-150 ease-out flex flex-col gap-6"
+          >
           {/* A4 Paper 1: Cover Page */}
           <div className="w-[210mm] min-h-[297mm] bg-white text-[#1A1209] p-[20mm] border-2 border-[#1A1209] shadow-[6px_6px_0px_#1A1209] flex flex-col justify-between font-sans relative">
             <div>
@@ -758,6 +827,7 @@ public class AcademicAlgorithm {
           </div>
         </div>
       </div>
+    )}
 
       {/* Engineering Canvas Modal */}
       <EngineeringCanvas

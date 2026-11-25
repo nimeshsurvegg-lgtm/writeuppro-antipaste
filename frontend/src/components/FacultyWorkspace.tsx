@@ -18,6 +18,7 @@ export const FacultyWorkspace: React.FC<FacultyWorkspaceProps> = ({ currentUser,
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [loading, setLoading] = useState(false);
+  const [openingSubId, setOpeningSubId] = useState<string | null>(null);
 
   // Rubric Scores State
   const [scoreK, setScoreK] = useState<number>(0);
@@ -47,6 +48,7 @@ export const FacultyWorkspace: React.FC<FacultyWorkspaceProps> = ({ currentUser,
 
   const openEvaluation = async (sub: Submission) => {
     try {
+      setOpeningSubId(sub.submission_id);
       const [fullSub, simResult] = await Promise.all([
         api.submissions.getSubmission(sub.submission_id),
         api.evaluations.getSimilarity(sub.submission_id).catch(() => null),
@@ -73,6 +75,8 @@ export const FacultyWorkspace: React.FC<FacultyWorkspaceProps> = ({ currentUser,
       }
     } catch (err: any) {
       showToast(err.message || 'Failed to load submission details', 'error');
+    } finally {
+      setOpeningSubId(null);
     }
   };
 
@@ -187,14 +191,20 @@ export const FacultyWorkspace: React.FC<FacultyWorkspaceProps> = ({ currentUser,
           </div>
 
           <div className="flex items-center gap-3">
-            <a
-              href={api.exports.getPdfUrl(activeSubmission.document_id)}
-              target="_blank"
-              rel="noreferrer"
+            <button
+              onClick={async () => {
+                try {
+                  showToast('Preparing authenticated PDF copy...', 'info');
+                  await api.exports.downloadPdf(activeSubmission.document_id, activeSubmission.title);
+                  showToast('PDF downloaded successfully.', 'success');
+                } catch (err: any) {
+                  showToast(err.message || 'Failed to download PDF', 'error');
+                }
+              }}
               className="neo-btn px-3.5 py-1.5 bg-white dark:bg-[#1D1814] text-[#1A1209] dark:text-[#F7F3E9] text-xs flex items-center gap-1.5"
             >
               <Download className="w-4 h-4 text-[#B84915]" /> PDF Copy
-            </a>
+            </button>
 
             {activeSubmission.status !== 'graded' && (
               <button
@@ -629,7 +639,14 @@ export const FacultyWorkspace: React.FC<FacultyWorkspaceProps> = ({ currentUser,
       </div>
 
       {/* Classroom Folder View */}
-      {Object.keys(classroomFolders).length === 0 ? (
+      {loading ? (
+        <div className="bg-white dark:bg-[#1D1814] border-2 border-[#1A1209] p-12 text-center shadow-[4px_4px_0px_#1A1209] font-mono space-y-3">
+          <div className="w-8 h-8 border-4 border-[#1A1209] border-t-[#B84915] animate-spin mx-auto" />
+          <p className="text-xs font-bold text-[#1A1209] dark:text-white uppercase tracking-wider">
+            Loading Classroom Folders & Submissions...
+          </p>
+        </div>
+      ) : Object.keys(classroomFolders).length === 0 ? (
         <div className="bg-white dark:bg-[#1D1814] border-2 border-[#1A1209] p-12 text-center shadow-[4px_4px_0px_#1A1209]">
           <Folder className="w-12 h-12 text-[#786958] mx-auto mb-3 opacity-50" />
           <h3 className="text-base font-bold tracking-tight text-[#1A1209] dark:text-white">No Student Submissions Found.</h3>

@@ -25,7 +25,31 @@ class Settings(BaseModel):
     TYPING_BURST_THRESHOLD_MS: int = 30
     TYPING_BURST_MIN_KEYS: int = 15
     
+    # Allowed CORS Origins
+    @property
+    def cors_origins_list(self) -> list:
+        default_origins = [
+            "http://localhost:5173",
+            "http://127.0.0.1:5173",
+            "http://localhost:3000",
+            "http://127.0.0.1:3000",
+            "http://localhost:8000",
+            "http://127.0.0.1:8000",
+            "https://writeuppro.vercel.app",
+            "https://writeuppro-antipaste.vercel.app",
+        ]
+        extra = os.getenv("CORS_ORIGINS", "")
+        if extra:
+            for item in extra.split(","):
+                clean = item.strip()
+                if clean and clean not in default_origins:
+                    default_origins.append(clean)
+        return default_origins
+
     # Database
-    DATABASE_PATH: str = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "writeuppro.db")
+    DATABASE_PATH: str = os.getenv(
+        "DATABASE_PATH",
+        os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "writeuppro.db")
+    )
 
 settings = Settings()

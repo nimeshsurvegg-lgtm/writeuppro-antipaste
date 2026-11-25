@@ -54,7 +54,7 @@ def decode_access_token(token: str) -> Dict[str, Any]:
         )
 
 def get_current_user_payload(credentials: Optional[HTTPAuthorizationCredentials] = Depends(security_bearer)) -> Dict[str, Any]:
-    """Dependency that returns the current authenticated user's JWT payload."""
+    """Dependency that returns the current authenticated user's JWT payload strictly from Authorization Bearer header."""
     if not credentials or not credentials.credentials:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

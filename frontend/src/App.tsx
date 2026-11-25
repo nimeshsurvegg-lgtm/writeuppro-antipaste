@@ -9,6 +9,7 @@ import { StudentWorkspace } from './components/StudentWorkspace';
 import { DocumentEditor } from './components/DocumentEditor';
 import { FacultyWorkspace } from './components/FacultyWorkspace';
 import { AdminWorkspace } from './components/AdminWorkspace';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 interface Toast {
   id: string;
@@ -33,8 +34,9 @@ export const App: React.FC = () => {
   const [email, setEmail] = useState('');
   const [role, setRole] = useState<'student' | 'faculty' | 'admin'>('student');
   const [authLoading, setAuthLoading] = useState(false);
+  const [isCheckingSession, setIsCheckingSession] = useState<boolean>(Boolean(getAuthToken()));
 
-  // Initialize theme and current session
+  // Initialize theme, current session, and session listeners
   useEffect(() => {
     const savedTheme = localStorage.getItem('writeuppro_theme');
     if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
@@ -45,7 +47,22 @@ export const App: React.FC = () => {
     const token = getAuthToken();
     if (token) {
       loadCurrentUser();
+    } else {
+      setIsCheckingSession(false);
     }
+
+    const handleUnauthorized = () => {
+      removeAuthToken();
+      setCurrentUser(null);
+      setActiveDocId(undefined);
+      setIsCheckingSession(false);
+      showToast('Session expired. Please sign in again.', 'info');
+    };
+
+    window.addEventListener('writeuppro:unauthorized', handleUnauthorized);
+    return () => {
+      window.removeEventListener('writeuppro:unauthorized', handleUnauthorized);
+    };
   }, []);
 
   const toggleDarkMode = () => {
@@ -88,6 +105,8 @@ export const App: React.FC = () => {
     } catch {
       removeAuthToken();
       setCurrentUser(null);
+    } finally {
+      setIsCheckingSession(false);
     }
   };
 
@@ -310,7 +329,22 @@ export const App: React.FC = () => {
 
       {/* Main Content Body */}
       <main className="flex-1">
-        {!currentUser ? (
+        {isCheckingSession ? (
+          <div className="flex flex-col items-center justify-center min-h-[60vh] p-8 text-center space-y-4 font-mono">
+            <div className="w-10 h-10 border-4 border-[#1A1209] border-t-[#B84915] animate-spin" />
+            <div>
+              <span className="text-[10px] font-bold uppercase tracking-widest text-[#B84915] block mb-1">
+                SECURE GATEWAY // SESSION HANDSHAKE
+              </span>
+              <h2 className="text-base font-bold tracking-tight text-[#1A1209] dark:text-white font-sans">
+                Authenticating Academic Environment...
+              </h2>
+              <p className="text-xs text-[#786958] dark:text-[#A89886] mt-1">
+                Synchronizing with WriteUp Pro verified cluster.
+              </p>
+            </div>
+          </div>
+        ) : !currentUser ? (
           /* Authentication Screen with Jury Testing Panel */
           <div className="max-w-md mx-auto my-12 p-8 bg-white dark:bg-[#1D1814] border-2 border-[#1A1209] shadow-[6px_6px_0px_#1A1209]">
             {/* Jury Quick Test Actions */}
@@ -450,27 +484,35 @@ export const App: React.FC = () => {
           </div>
         ) : activeDocId !== undefined ? (
           /* Document Authoring Editor */
-          <DocumentEditor
-            docId={activeDocId}
-            currentUser={currentUser}
-            onBack={() => setActiveDocId(undefined)}
-            onSubmitted={() => setActiveDocId(undefined)}
-            showToast={showToast}
-          />
+          <ErrorBoundary fallbackTitle="Document Authoring Workspace">
+            <DocumentEditor
+              docId={activeDocId}
+              currentUser={currentUser}
+              onBack={() => setActiveDocId(undefined)}
+              onSubmitted={() => setActiveDocId(undefined)}
+              showToast={showToast}
+            />
+          </ErrorBoundary>
         ) : currentUser.role === 'student' ? (
           /* Student Workspace */
-          <StudentWorkspace
-            currentUser={currentUser}
-            onOpenEditor={(id) => setActiveDocId(id)}
-            showToast={showToast}
-            onProfileUpdated={loadCurrentUser}
-          />
+          <ErrorBoundary fallbackTitle="Student Academic Workspace">
+            <StudentWorkspace
+              currentUser={currentUser}
+              onOpenEditor={(id) => setActiveDocId(id)}
+              showToast={showToast}
+              onProfileUpdated={loadCurrentUser}
+            />
+          </ErrorBoundary>
         ) : currentUser.role === 'faculty' ? (
           /* Faculty Workspace */
-          <FacultyWorkspace currentUser={currentUser} showToast={showToast} />
+          <ErrorBoundary fallbackTitle="Faculty Evaluation Desk">
+            <FacultyWorkspace currentUser={currentUser} showToast={showToast} />
+          </ErrorBoundary>
         ) : (
           /* Administrator Control Center */
-          <AdminWorkspace currentUser={currentUser} showToast={showToast} />
+          <ErrorBoundary fallbackTitle="Administrator Control Center">
+            <AdminWorkspace currentUser={currentUser} showToast={showToast} />
+          </ErrorBoundary>
         )}
       </main>
     </div>

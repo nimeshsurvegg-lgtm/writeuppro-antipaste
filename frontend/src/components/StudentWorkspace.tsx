@@ -42,16 +42,23 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({
   const loadStudentData = async () => {
     try {
       setLoading(true);
-      const [docs, stats, taskList] = await Promise.all([
+      const results = await Promise.allSettled([
         api.documents.listDocuments(),
         api.analytics.getStudentAnalytics(),
         api.tasks.listTasks(),
       ]);
-      setDocuments(docs);
-      setAnalytics(stats);
-      setTasks(taskList);
+
+      if (results[0].status === 'fulfilled') {
+        setDocuments(results[0].value || []);
+      }
+      if (results[1].status === 'fulfilled') {
+        setAnalytics(results[1].value);
+      }
+      if (results[2].status === 'fulfilled') {
+        setTasks(results[2].value || []);
+      }
     } catch (err: any) {
-      console.error(err);
+      console.error('Error loading student workspace data', err);
     } finally {
       setLoading(false);
     }
@@ -367,7 +374,14 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({
           </span>
         </div>
 
-        {documents.length === 0 ? (
+        {loading ? (
+          <div className="p-12 text-center text-[#786958] font-mono space-y-3">
+            <div className="w-8 h-8 border-4 border-[#1A1209] border-t-[#B84915] animate-spin mx-auto" />
+            <p className="text-xs font-bold text-[#1A1209] dark:text-white uppercase tracking-wider">
+              Retrieving Manuscripts & Evaluation Ledger...
+            </p>
+          </div>
+        ) : documents.length === 0 ? (
           <div className="p-12 text-center text-[#786958]">
             <FileText className="w-10 h-10 mx-auto mb-2 opacity-40 text-[#1A1209]" />
             <p className="text-sm font-bold text-[#1A1209] dark:text-white">No documents authored yet</p>
@@ -451,15 +465,21 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({
                       )}
 
                       {(d.status === 'submitted' || d.status === 'graded') && (
-                        <a
-                          href={api.exports.getPdfUrl(d.id)}
-                          target="_blank"
-                          rel="noreferrer"
+                        <button
+                          onClick={async () => {
+                            try {
+                              showToast('Generating signed academic PDF...', 'info');
+                              await api.exports.downloadPdf(d.id, d.title);
+                              showToast('PDF downloaded successfully.', 'success');
+                            } catch (err: any) {
+                              showToast(err.message || 'Failed to download PDF', 'error');
+                            }
+                          }}
                           className="neo-btn px-2.5 py-1.5 bg-white dark:bg-[#1D1814] text-[#1A1209] dark:text-white text-[11px]"
-                          title="Download PDF"
+                          title="Download Authenticated PDF"
                         >
                           <Download className="w-3 h-3 text-[#B84915]" />
-                        </a>
+                        </button>
                       )}
                     </td>
                   </tr>

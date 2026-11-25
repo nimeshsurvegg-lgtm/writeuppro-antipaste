@@ -1,60 +1,231 @@
-const API_BASE = (import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1').replace(/\/$/, '');
+// Dynamic API Base URL resolver that works seamlessly across local dev, Render, Vercel, and unified deployments
+export function getApiBase(): string {
+  const envUrl = import.meta.env.VITE_API_URL;
+  if (envUrl && typeof envUrl === 'string' && envUrl.trim().length > 0) {
+    return envUrl.replace(/\/$/, '');
+  }
+  if (typeof window !== 'undefined') {
+    const isLocalhost =
+      window.location.hostname === 'localhost' ||
+      window.location.hostname === '127.0.0.1' ||
+      window.location.hostname.endsWith('.local');
+
+    // Only target local port 8000 if explicitly running in a local developer browser
+    if (isLocalhost && (window.location.port === '5173' || window.location.port === '3000')) {
+      return 'http://localhost:8000/api/v1';
+    }
+    // In production (Vercel, Render) or unified host, use origin-relative /api/v1 (never localhost!)
+    return `${window.location.origin}/api/v1`;
+  }
+  return '/api/v1';
+}
+
+const API_BASE = getApiBase();
+
 export function getAuthToken(): string | null {
-  return localStorage.getItem('writeuppro_token');
+  try {
+    return localStorage.getItem('writeuppro_token');
+  } catch {
+    return null;
+  }
 }
 
 export function setAuthToken(token: string) {
-  localStorage.setItem('writeuppro_token', token);
+  try {
+    localStorage.setItem('writeuppro_token', token);
+  } catch (e) {
+    console.error('Failed to persist auth token', e);
+  }
 }
 
 export function removeAuthToken() {
-  localStorage.removeItem('writeuppro_token');
-  localStorage.removeItem('writeuppro_user');
+  try {
+    localStorage.removeItem('writeuppro_token');
+    localStorage.removeItem('writeuppro_user');
+  } catch (e) {
+    console.error('Failed to remove auth token', e);
+  }
 }
 
-export async function apiFetch<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-  const token = getAuthToken();
-  const headers = new Headers(options.headers || {});
-  
-  if (!headers.has('Content-Type') && !(options.body instanceof FormData)) {
-    headers.set('Content-Type', 'application/json');
+interface ApiOptions extends RequestInit {
+  timeoutMs?: number;
+  skipRetry?: boolean;
+}
+
+// In-flight GET request deduplication cache to prevent redundant concurrent fetches
+const inFlightRequests = new Map<string, Promise<any>>();
+
+export async function apiFetch<T>(endpoint: string, options: ApiOptions = {}): Promise<T> {
+  const method = (options.method || 'GET').toUpperCase();
+  const isGet = method === 'GET';
+  const cacheKey = `${method}:${endpoint}`;
+
+  if (isGet && inFlightRequests.has(cacheKey)) {
+    return inFlightRequests.get(cacheKey) as Promise<T>;
   }
 
-  if (token && !headers.has('Authorization')) {
+  const executeFetch = async (attempt = 1): Promise<T> => {
+    const token = getAuthToken();
+    const headers = new Headers(options.headers || {});
+
+    if (!headers.has('Content-Type') && !(options.body instanceof FormData)) {
+      headers.set('Content-Type', 'application/json');
+    }
+
+    if (token && !headers.has('Authorization')) {
+      headers.set('Authorization', `Bearer ${token}`);
+    }
+
+    const timeoutMs = options.timeoutMs || (method === 'GET' ? 18000 : 25000);
+    const controller = new AbortController();
+    const timer = setTimeout(() => {
+      controller.abort();
+    }, timeoutMs);
+
+    // If caller provided their own signal, listen to it as well
+    if (options.signal) {
+      options.signal.addEventListener('abort', () => controller.abort());
+    }
+
+    const url = `${getApiBase()}${endpoint}`;
+
+    try {
+      const response = await fetch(url, {
+        ...options,
+        headers,
+        signal: controller.signal,
+      });
+
+      clearTimeout(timer);
+
+      // Handle 401 Unauthorized (Expired or Invalid JWT)
+      if (response.status === 401) {
+        removeAuthToken();
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('writeuppro:unauthorized'));
+        }
+        throw new Error('Your session has expired. Please sign in again.');
+      }
+
+      // Handle 502/503/504 Render cold-start transient errors on GET
+      if (
+        (response.status === 502 || response.status === 503 || response.status === 504) &&
+        isGet &&
+        attempt < 2 &&
+        !options.skipRetry
+      ) {
+        await new Promise((r) => setTimeout(r, 1200));
+        return executeFetch(attempt + 1);
+      }
+
+      if (!response.ok) {
+        let errorDetail = `Request failed with status ${response.status}`;
+        try {
+          const errJson = await response.json();
+          if (Array.isArray(errJson.detail)) {
+            errorDetail = errJson.detail.map((d: any) => d.msg || JSON.stringify(d)).join('; ');
+          } else if (typeof errJson.detail === 'object' && errJson.detail !== null) {
+            errorDetail = JSON.stringify(errJson.detail);
+          } else if (errJson.detail) {
+            errorDetail = String(errJson.detail);
+          } else if (errJson.message) {
+            errorDetail = String(errJson.message);
+          } else {
+            errorDetail = JSON.stringify(errJson);
+          }
+        } catch {
+          errorDetail = (await response.text()) || response.statusText || errorDetail;
+        }
+        throw new Error(errorDetail);
+      }
+
+      if (response.status === 204) {
+        return {} as T;
+      }
+
+      return await response.json();
+    } catch (err: any) {
+      clearTimeout(timer);
+
+      if (err.name === 'AbortError') {
+        throw new Error(
+          'Request timed out. The server might be waking up or experiencing high traffic. Please try again.'
+        );
+      }
+
+      // If connection refused or network failure during cold start, retry once for GET
+      if (
+        isGet &&
+        attempt < 2 &&
+        !options.skipRetry &&
+        (err.message?.includes('Failed to fetch') || err.message?.includes('NetworkError'))
+      ) {
+        await new Promise((r) => setTimeout(r, 1200));
+        return executeFetch(attempt + 1);
+      }
+
+      throw err;
+    }
+  };
+
+  if (isGet) {
+    const promise = executeFetch().finally(() => {
+      inFlightRequests.delete(cacheKey);
+    });
+    inFlightRequests.set(cacheKey, promise);
+    return promise;
+  }
+
+  return executeFetch();
+}
+
+export async function downloadAuthenticatedFile(endpoint: string, defaultFilename: string): Promise<void> {
+  const token = getAuthToken();
+  const headers = new Headers();
+  if (token) {
     headers.set('Authorization', `Bearer ${token}`);
   }
 
-  const response = await fetch(`${API_BASE}${endpoint}`, {
-    ...options,
-    headers,
-  });
+  const url = `${getApiBase()}${endpoint}`;
+  const response = await fetch(url, { method: 'GET', headers });
+
+  if (response.status === 401) {
+    removeAuthToken();
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('writeuppro:unauthorized'));
+    }
+    throw new Error('Your session has expired. Please sign in again.');
+  }
 
   if (!response.ok) {
-    let errorDetail = 'API Request Failed';
+    let errMsg = `Download failed with status ${response.status}`;
     try {
       const errJson = await response.json();
-      if (Array.isArray(errJson.detail)) {
-        errorDetail = errJson.detail.map((d: any) => d.msg || JSON.stringify(d)).join('; ');
-      } else if (typeof errJson.detail === 'object' && errJson.detail !== null) {
-        errorDetail = JSON.stringify(errJson.detail);
-      } else if (errJson.detail) {
-        errorDetail = String(errJson.detail);
-      } else if (errJson.message) {
-        errorDetail = String(errJson.message);
-      } else {
-        errorDetail = JSON.stringify(errJson);
-      }
+      errMsg = errJson.detail || errMsg;
     } catch {
-      errorDetail = (await response.text()) || response.statusText;
+      // keep fallback
     }
-    throw new Error(errorDetail);
+    throw new Error(errMsg);
   }
 
-  if (response.status === 204) {
-    return {} as T;
+  const disposition = response.headers.get('Content-Disposition');
+  let filename = defaultFilename;
+  if (disposition && disposition.includes('filename=')) {
+    const match = disposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+    if (match && match[1]) {
+      filename = match[1].replace(/['"]/g, '').trim();
+    }
   }
 
-  return response.json();
+  const blob = await response.blob();
+  const blobUrl = window.URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = blobUrl;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  setTimeout(() => window.URL.revokeObjectURL(blobUrl), 2000);
 }
 
 export const api = {
@@ -207,8 +378,13 @@ export const api = {
   },
 
   exports: {
-    getPdfUrl: (docId: string) => `${API_BASE}/exports/pdf/${docId}`,
-    getGradingLedgerCsvUrl: () => `${API_BASE}/exports/ledger/csv`,
-    getIntegrityLedgerCsvUrl: () => `${API_BASE}/exports/integrity/csv`,
+    downloadPdf: (docId: string, title?: string) => {
+      const cleanTitle = title ? title.replace(/[^a-zA-Z0-9_-]/g, '_').substring(0, 40) : docId;
+      return downloadAuthenticatedFile(`/exports/pdf/${docId}`, `${cleanTitle}.pdf`);
+    },
+    downloadGradingLedgerCsv: () =>
+      downloadAuthenticatedFile('/exports/ledger/csv', 'writeuppro_grading_ledger.csv'),
+    downloadIntegrityLedgerCsv: () =>
+      downloadAuthenticatedFile('/exports/integrity/csv', 'writeuppro_integrity_audit_ledger.csv'),
   },
 };

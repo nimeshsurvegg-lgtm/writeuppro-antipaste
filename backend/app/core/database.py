@@ -7,9 +7,12 @@ from app.core.config import settings
 from app.core.security import hash_password
 
 def get_db_connection() -> sqlite3.Connection:
-    """Returns a SQLite connection with foreign keys enabled and row factory set to dict."""
-    conn = sqlite3.connect(settings.DATABASE_PATH, timeout=15)
+    """Returns a high-concurrency SQLite connection with WAL mode, busy timeout, and row factory."""
+    conn = sqlite3.connect(settings.DATABASE_PATH, timeout=25, check_same_thread=False)
     conn.execute("PRAGMA foreign_keys = ON;")
+    conn.execute("PRAGMA journal_mode = WAL;")
+    conn.execute("PRAGMA synchronous = NORMAL;")
+    conn.execute("PRAGMA busy_timeout = 15000;")
     conn.row_factory = sqlite3.Row
     return conn
 
@@ -268,6 +271,21 @@ def init_db():
         timestamp TEXT NOT NULL
     );
     """)
+
+    # 11. Performance Indexes for Rapid Query Execution
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_documents_student ON documents(student_id);")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_documents_status ON documents(status);")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_document_versions_doc ON document_versions(document_id);")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_submissions_doc ON submissions(document_id);")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_submissions_student ON submissions(student_id);")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_submissions_status ON submissions(status);")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_evaluations_sub ON evaluations(submission_id);")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_evaluations_faculty ON evaluations(faculty_id);")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_student_profiles_user ON student_profiles(user_id);")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_student_profiles_status ON student_profiles(status);")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_integrity_events_doc ON integrity_events(document_id);")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_integrity_events_student ON integrity_events(student_id);")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_notifications_user_unread ON notifications(user_id, is_read);")
 
     conn.commit()
     seed_initial_data(conn)

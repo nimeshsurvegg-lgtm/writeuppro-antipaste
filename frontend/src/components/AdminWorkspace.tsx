@@ -21,19 +21,26 @@ export const AdminWorkspace: React.FC<AdminWorkspaceProps> = ({ currentUser, sho
 
   useEffect(() => {
     loadAllData();
-  }, [activeTab]);
+  }, []);
 
   const loadAllData = async () => {
     try {
       setLoading(true);
-      const [stats, profs, events] = await Promise.all([
+      const results = await Promise.allSettled([
         api.analytics.getAdminAnalytics(),
         api.academic.listStudentProfiles(),
         api.integrity.listEvents(),
       ]);
-      setAnalytics(stats);
-      setProfiles(profs);
-      setIntegrityEvents(events);
+
+      if (results[0].status === 'fulfilled') {
+        setAnalytics(results[0].value);
+      }
+      if (results[1].status === 'fulfilled') {
+        setProfiles(results[1].value || []);
+      }
+      if (results[2].status === 'fulfilled') {
+        setIntegrityEvents(results[2].value || []);
+      }
     } catch (err: any) {
       showToast(err.message || 'Failed to load administrator data', 'error');
     } finally {
@@ -74,16 +81,27 @@ export const AdminWorkspace: React.FC<AdminWorkspaceProps> = ({ currentUser, sho
   return (
     <div className="p-8 max-w-7xl mx-auto space-y-8">
       {/* Overview Header */}
-      <div className="p-6 bg-white dark:bg-[#1D1814] border-2 border-[#1A1209] shadow-[4px_4px_0px_#1A1209]">
-        <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-[#B84915] block mb-1">
-          GOVERNANCE & TELEMETRY REGISTRY // INSTITUTIONAL AUDIT LEDGER
-        </span>
-        <h1 className="text-2xl font-black text-[#1A1209] dark:text-white tracking-tight">
-          Administrator Control Center.
-        </h1>
-        <p className="text-xs text-[#5C4D3C] dark:text-[#B8A99A] font-mono mt-1">
-          Institutional oversight for student onboarding verification, academic security telemetry, and grading ledgers.
-        </p>
+      <div className="p-6 bg-white dark:bg-[#1D1814] border-2 border-[#1A1209] shadow-[4px_4px_0px_#1A1209] flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-[#B84915] block mb-1">
+            GOVERNANCE & TELEMETRY REGISTRY // INSTITUTIONAL AUDIT LEDGER
+          </span>
+          <h1 className="text-2xl font-black text-[#1A1209] dark:text-white tracking-tight">
+            Administrator Control Center.
+          </h1>
+          <p className="text-xs text-[#5C4D3C] dark:text-[#B8A99A] font-mono mt-1">
+            Institutional oversight for student onboarding verification, academic security telemetry, and grading ledgers.
+          </p>
+        </div>
+        <button
+          onClick={loadAllData}
+          disabled={loading}
+          className="neo-btn px-4 py-2 bg-[#F4EFE6] dark:bg-[#26201B] hover:bg-[#B84915] hover:text-white text-[#1A1209] dark:text-white text-xs font-mono flex items-center gap-2"
+          title="Refresh All Institutional Data"
+        >
+          <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+          <span>{loading ? 'REFRESHING...' : 'REFRESH DATA'}</span>
+        </button>
       </div>
 
       {analytics && (
@@ -184,24 +202,36 @@ export const AdminWorkspace: React.FC<AdminWorkspaceProps> = ({ currentUser, sho
         {/* Global Export Buttons */}
         <div className="flex items-center gap-2 pb-2">
           {activeTab === 'integrity' && (
-            <a
-              href={api.exports.getIntegrityLedgerCsvUrl()}
-              target="_blank"
-              rel="noreferrer"
+            <button
+              onClick={async () => {
+                try {
+                  showToast('Exporting security audit telemetry...', 'info');
+                  await api.exports.downloadIntegrityLedgerCsv();
+                  showToast('Integrity ledger CSV downloaded.', 'success');
+                } catch (err: any) {
+                  showToast(err.message || 'Failed to download CSV', 'error');
+                }
+              }}
               className="neo-btn px-3.5 py-1.5 text-xs bg-[#1A1209] text-white flex items-center gap-1.5"
             >
               <Download className="w-3.5 h-3.5 text-[#B84915]" /> EXPORT INTEGRITY CSV
-            </a>
+            </button>
           )}
           {activeTab === 'ledger' && (
-            <a
-              href={api.exports.getGradingLedgerCsvUrl()}
-              target="_blank"
-              rel="noreferrer"
+            <button
+              onClick={async () => {
+                try {
+                  showToast('Exporting official grading ledger...', 'info');
+                  await api.exports.downloadGradingLedgerCsv();
+                  showToast('Grading ledger CSV downloaded.', 'success');
+                } catch (err: any) {
+                  showToast(err.message || 'Failed to download CSV', 'error');
+                }
+              }}
               className="neo-btn px-3.5 py-1.5 text-xs bg-[#B84915] hover:bg-[#A03D0E] text-white flex items-center gap-1.5"
             >
               <Download className="w-3.5 h-3.5" /> EXPORT GRADING CSV
-            </a>
+            </button>
           )}
         </div>
       </div>
@@ -381,14 +411,20 @@ export const AdminWorkspace: React.FC<AdminWorkspaceProps> = ({ currentUser, sho
                 Official institutional grade book with immutable digital signature hashes.
               </p>
             </div>
-            <a
-              href={api.exports.getGradingLedgerCsvUrl()}
-              target="_blank"
-              rel="noreferrer"
+            <button
+              onClick={async () => {
+                try {
+                  showToast('Exporting official grading ledger...', 'info');
+                  await api.exports.downloadGradingLedgerCsv();
+                  showToast('Grading ledger CSV downloaded.', 'success');
+                } catch (err: any) {
+                  showToast(err.message || 'Failed to download CSV', 'error');
+                }
+              }}
               className="neo-btn px-4 py-2 bg-[#B84915] hover:bg-[#A03D0E] text-white text-xs flex items-center gap-2"
             >
               <Download className="w-4 h-4" /> DOWNLOAD COMPLETE CSV →
-            </a>
+            </button>
           </div>
 
           <div className="p-4 bg-[#FAF6EE] dark:bg-[#26201B] border-2 border-[#1A1209] text-xs font-mono text-[#1A1209] dark:text-[#D4C7B5] leading-relaxed shadow-[2px_2px_0px_#1A1209]">
