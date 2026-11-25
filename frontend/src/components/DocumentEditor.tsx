@@ -27,6 +27,11 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
   // Student profile and document authoring metadata
   const profile = (currentUser.profile as StudentProfile) || null;
   const [doc, setDoc] = useState<AcademicDocument | null>(null);
+  const [currentDocId, setCurrentDocId] = useState<string | null>(docId);
+  const currentDocIdRef = useRef<string | null>(docId);
+  const isSavingRef = useRef<boolean>(false);
+  const inFlightSaveRef = useRef<Promise<{ success: boolean; docId?: string; error?: string }> | null>(null);
+
   const isReadOnly = doc?.status === 'submitted' || doc?.status === 'graded';
   const authorRollNumber = doc?.roll_number || profile?.roll_number || '21CE104';
   const authorYearLevel = doc?.year_level || profile?.year_level || 'SE';
@@ -58,10 +63,14 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
   // Load curriculum and existing document
   useEffect(() => {
     loadCurriculum();
+    setCurrentDocId(docId);
+    currentDocIdRef.current = docId;
     if (docId) {
       loadDocument(docId);
     } else {
       setDoc(null);
+      setCurrentDocId(null);
+      currentDocIdRef.current = null;
       setTitle('');
       setDocType('Assignment');
       setDocNumber('1');
@@ -90,6 +99,8 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
       setDocError(null);
       const data = await api.documents.getDocument(id);
       setDoc(data);
+      setCurrentDocId(data.id || id);
+      currentDocIdRef.current = data.id || id;
       setTitle(data.title || '');
       setDocType(data.doc_type || 'Assignment');
       setSubject(data.subject_name || '');
@@ -120,15 +131,16 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
   };
 
   const handleRestoreVersion = async (versionNum: number) => {
-    if (!docId) return;
+    const activeId = currentDocIdRef.current || docId;
+    if (!activeId) return;
     if (!confirm(`Restore document to version v${versionNum}? Any unsaved changes in current editor will be overwritten.`)) return;
     try {
-      const res = await api.documents.restoreVersion(docId, versionNum);
+      const res = await api.documents.restoreVersion(activeId, versionNum);
       if (editorRef.current) {
         editorRef.current.innerHTML = res.content_html;
       }
       showToast(`Restored to version v${versionNum}`, 'success');
-      loadDocument(docId);
+      loadDocument(activeId);
       setShowVersionHistory(false);
     } catch (err: any) {
       showToast(err.message || 'Failed to restore version', 'error');
@@ -145,7 +157,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
       e.preventDefault();
       showToast('Academic Integrity Violation: External pasting is disabled by institutional policy.', 'error');
       api.integrity.logEvent({
-        document_id: docId || undefined,
+        document_id: currentDocIdRef.current || docId || undefined,
         event_type: 'paste_attempt',
         severity: 'medium',
         metadata: {
@@ -160,7 +172,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
       e.preventDefault();
       showToast('Integrity Alert: External drag-and-drop is restricted.', 'error');
       api.integrity.logEvent({
-        document_id: docId || undefined,
+        document_id: currentDocIdRef.current || docId || undefined,
         event_type: 'drop_attempt',
         severity: 'medium',
         metadata: { timestamp: new Date().toISOString() },
@@ -172,7 +184,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
       if (doc?.status !== 'submitted' && doc?.status !== 'graded') {
         showToast('Security Alert: Focus switch or window blur recorded.', 'info');
         api.integrity.logEvent({
-          document_id: docId || undefined,
+          document_id: currentDocIdRef.current || docId || undefined,
           event_type: 'tab_blur',
           severity: 'low',
           metadata: { timestamp: new Date().toISOString() },
@@ -192,7 +204,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
       if (burstCountRef.current > 15) {
         showToast('Integrity Notice: Unnatural keystroke cadence recorded.', 'info');
         api.integrity.logEvent({
-          document_id: docId || undefined,
+          document_id: currentDocIdRef.current || docId || undefined,
           event_type: 'typing_burst',
           severity: 'medium',
           metadata: { burst_count: burstCountRef.current },
@@ -291,42 +303,109 @@ public class AcademicAlgorithm {
     showToast('Diagram inserted into document.', 'success');
   };
 
-  const saveDocument = async (isAuto = false) => {
-    if (!title.trim()) {
+  const saveDocument = async (isAuto = false): Promise<{ success: boolean; docId?: string; error?: string }> => {
+    // If a save is already in-flight, await its completion to avoid database lock/race
+    if (isSavingRef.current && inFlightSaveRef.current) {
+      try {
+        const inFlightRes = await inFlightSaveRef.current;
+        if (!hasUnsavedChanges && inFlightRes.success) {
+          return inFlightRes;
+        }
+      } catch {
+        // If in-flight save threw, continue with a fresh attempt
+      }
+    }
+
+    const trimmedTitle = title.trim();
+    if (!trimmedTitle) {
       if (!isAuto) showToast('Document Title is required.', 'error');
-      return;
+      return { success: false, error: 'Document Title is required.' };
     }
 
-    try {
+    // Cancel any pending debounced autosave timer so it does not race
+    if (autoSaveTimerRef.current) {
+      clearTimeout(autoSaveTimerRef.current);
+      autoSaveTimerRef.current = null;
+    }
+
+    const contentHtml = editorRef.current?.innerHTML || '';
+    const targetId = currentDocIdRef.current || docId || doc?.id || undefined;
+
+    const payload = {
+      title: trimmedTitle,
+      subject_name: subject,
+      subject_code: subjectCode,
+      doc_type: docType,
+      doc_number: docNumber,
+      content_html: contentHtml,
+      word_count: wordCount,
+      task_id: doc?.task_id || undefined,
+      status: doc?.status || 'draft',
+    };
+
+    const runSave = async (): Promise<{ success: boolean; docId?: string; error?: string }> => {
+      isSavingRef.current = true;
       setSaveStatus('Saving...');
-      const payload = {
-        title: title.trim(),
-        subject_name: subject,
-        subject_code: subjectCode,
-        doc_type: docType,
-        doc_number: docNumber,
-        content_html: editorRef.current?.innerHTML || '',
-        word_count: wordCount,
-        status: doc?.status || 'draft',
-      };
+      try {
+        const res = await api.documents.saveDocument(payload, targetId);
+        const savedId = res.id;
 
-      const res = await api.documents.saveDocument(payload, docId || undefined);
-      setHasUnsavedChanges(false);
-      const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      setSaveStatus(`Saved at ${timeStr}`);
-      if (!isAuto) showToast('Document saved successfully.', 'success');
-    } catch (err: any) {
-      setSaveStatus('Save Failed');
-      if (!isAuto) showToast(err.message || 'Failed to save document', 'error');
-    }
+        // Immediately update ref and state with the persistent database ID
+        currentDocIdRef.current = savedId;
+        setCurrentDocId(savedId);
+
+        setDoc((prev) => ({
+          ...(prev || {}),
+          id: savedId,
+          student_id: currentUser.id,
+          title: payload.title,
+          subject_name: payload.subject_name,
+          subject_code: payload.subject_code,
+          doc_type: payload.doc_type,
+          doc_number: payload.doc_number,
+          content_html: payload.content_html,
+          word_count: payload.word_count,
+          task_id: payload.task_id,
+          status: prev?.status || 'draft',
+          created_at: prev?.created_at || res.updated_at,
+          updated_at: res.updated_at,
+          student_name: prev?.student_name || currentUser.full_name,
+          roll_number: prev?.roll_number || profile?.roll_number,
+          year_level: prev?.year_level || profile?.year_level,
+          division_name: prev?.division_name || profile?.division_name,
+        } as AcademicDocument));
+
+        setHasUnsavedChanges(false);
+        const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        setSaveStatus(`Saved at ${timeStr}`);
+        if (!isAuto) showToast('Document saved successfully.', 'success');
+
+        return { success: true, docId: savedId };
+      } catch (err: any) {
+        setSaveStatus('Save Failed');
+        const errMsg = err.message || 'Failed to save document';
+        if (!isAuto) showToast(errMsg, 'error');
+        return { success: false, error: errMsg };
+      } finally {
+        isSavingRef.current = false;
+        inFlightSaveRef.current = null;
+      }
+    };
+
+    inFlightSaveRef.current = runSave();
+    return await inFlightSaveRef.current;
   };
 
   const handleSubmitFinal = async () => {
+    if (isSubmitting) return;
+
     if (!title.trim()) {
       showToast('Document Title is required.', 'error');
       return;
     }
-    if (wordCount < 10) {
+    const text = editorRef.current?.innerText || '';
+    const trimmedWords = text.trim().split(/\s+/).filter((w) => w.length > 0).length;
+    if (trimmedWords < 10 && wordCount < 10) {
       showToast('Document cannot be submitted empty. Please write your content.', 'error');
       return;
     }
@@ -336,19 +415,37 @@ public class AcademicAlgorithm {
     );
     if (!confirmSubmit) return;
 
+    // Clear any pending debounced autosave timer
+    if (autoSaveTimerRef.current) {
+      clearTimeout(autoSaveTimerRef.current);
+      autoSaveTimerRef.current = null;
+    }
+
     try {
       setIsSubmitting(true);
-      // Ensure latest changes saved first
-      await saveDocument(true);
 
-      const targetDocId = docId || doc?.id;
+      // Force save latest changes to ensure database persistence before submitting
+      let targetDocId = currentDocIdRef.current || docId || doc?.id;
+      if (hasUnsavedChanges || !targetDocId || isSavingRef.current) {
+        const saveResult = await saveDocument(true);
+        if (!saveResult.success || !saveResult.docId) {
+          showToast(saveResult.error || 'Failed to save document before final submission.', 'error');
+          setIsSubmitting(false);
+          return;
+        }
+        targetDocId = saveResult.docId;
+      }
+
       if (!targetDocId) {
         showToast('Save document before final submission.', 'error');
+        setIsSubmitting(false);
         return;
       }
 
-      const res = await api.submissions.createSubmission(targetDocId);
+      const res = await api.submissions.createSubmission(targetDocId, doc?.task_id || undefined);
       showToast(`Document successfully submitted! Receipt: ${res.submission_code}`, 'success');
+      setDoc((prev) => prev ? { ...prev, status: 'submitted' } : null);
+      setHasUnsavedChanges(false);
       onSubmitted();
     } catch (err: any) {
       showToast(err.message || 'Failed to submit document', 'error');
@@ -388,7 +485,7 @@ public class AcademicAlgorithm {
             <span>{saveStatus}</span>
           </div>
 
-          {docId && (
+          {(currentDocId || docId) && (
             <button
               onClick={() => setShowVersionHistory(true)}
               className="neo-btn px-3 py-1.5 text-xs bg-white dark:bg-[#1D1814] text-[#1A1209] dark:text-[#F7F3E9] flex items-center gap-1.5"
@@ -421,10 +518,11 @@ public class AcademicAlgorithm {
               </span>
               <button
                 onClick={async () => {
-                  if (!doc?.id) return;
+                  const exportId = currentDocId || docId || doc?.id;
+                  if (!exportId) return;
                   try {
                     showToast('Generating signed academic PDF...', 'info');
-                    await api.exports.downloadPdf(doc.id, title);
+                    await api.exports.downloadPdf(exportId, title);
                     showToast('PDF downloaded successfully.', 'success');
                   } catch (err: any) {
                     showToast(err.message || 'Failed to download PDF', 'error');
