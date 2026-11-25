@@ -75,6 +75,13 @@ export interface AcademicDocument {
   submission_code?: string;
   submission_date?: string;
   faculty_remarks?: string;
+  student_name?: string;
+  roll_number?: string;
+  year_level?: string;
+  division_name?: string;
+  rubric_scores_json?: string;
+  rubric_scores?: any;
+  digital_signature_code?: string;
   versions?: Array<{ version_num: number; change_summary: string; created_at: string }>;
 }
 

@@ -6,7 +6,7 @@ import {
   ZoomOut, ShieldAlert, CheckCircle2, Clock, FileText, Download, History, RotateCcw, X
 } from 'lucide-react';
 import { api } from '../lib/api';
-import { AcademicDocument, User } from '../types';
+import { AcademicDocument, User, StudentProfile } from '../types';
 import { EngineeringCanvas } from './EngineeringCanvas';
 
 interface DocumentEditorProps {
@@ -24,7 +24,14 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
   onSubmitted,
   showToast,
 }) => {
+  // Student profile and document authoring metadata
+  const profile = (currentUser.profile as StudentProfile) || null;
   const [doc, setDoc] = useState<AcademicDocument | null>(null);
+  const isReadOnly = doc?.status === 'submitted' || doc?.status === 'graded';
+  const authorRollNumber = doc?.roll_number || profile?.roll_number || '21CE104';
+  const authorYearLevel = doc?.year_level || profile?.year_level || 'SE';
+  const authorDivisionName = doc?.division_name || profile?.division_name || 'Div A';
+  const authorStudentName = doc?.student_name || currentUser.full_name;
   const [docLoading, setDocLoading] = useState<boolean>(Boolean(docId));
   const [docError, setDocError] = useState<string | null>(null);
   const [title, setTitle] = useState('');
@@ -350,8 +357,6 @@ public class AcademicAlgorithm {
     }
   };
 
-  const isReadOnly = doc?.status === 'submitted' || doc?.status === 'graded';
-
   return (
     <div className="flex flex-col h-[calc(100vh-80px)] overflow-hidden bg-[#ECE4D4] dark:bg-[#12100E]">
       {/* Top Header Bar */}
@@ -630,7 +635,7 @@ public class AcademicAlgorithm {
                 <tbody>
                   <tr className="bg-[#FAF6EE]">
                     <td className="border-2 border-[#1A1209] p-2 font-bold w-1/3">Class & Division</td>
-                    <td className="border-2 border-[#1A1209] p-2">{`${profile?.year_level || 'SE'} - ${profile?.division_name || 'Div A'}`}</td>
+                    <td className="border-2 border-[#1A1209] p-2">{`${authorYearLevel} - ${authorDivisionName}`}</td>
                     <td className="border-2 border-[#1A1209] p-2 font-bold w-1/3">Subject Code</td>
                     <td className="border-2 border-[#1A1209] p-2">{subjectCode}</td>
                   </tr>
@@ -642,11 +647,11 @@ public class AcademicAlgorithm {
                     <td className="border-2 border-[#1A1209] p-2 font-bold">{docType} Number</td>
                     <td className="border-2 border-[#1A1209] p-2">{docNumber}</td>
                     <td className="border-2 border-[#1A1209] p-2 font-bold">Roll Number</td>
-                    <td className="border-2 border-[#1A1209] p-2 font-bold">{profile?.roll_number || '21CE104'}</td>
+                    <td className="border-2 border-[#1A1209] p-2 font-bold">{authorRollNumber}</td>
                   </tr>
                   <tr>
                     <td className="border-2 border-[#1A1209] p-2 font-bold">Student Name</td>
-                    <td className="border-2 border-[#1A1209] p-2 font-sans font-bold">{currentUser.full_name}</td>
+                    <td className="border-2 border-[#1A1209] p-2 font-sans font-bold">{authorStudentName}</td>
                     <td className="border-2 border-[#1A1209] p-2 font-bold">Submission Status</td>
                     <td className="border-2 border-[#1A1209] p-2 font-bold uppercase">
                       <span className="stamp-badge py-0 bg-white text-[#1A1209]">
