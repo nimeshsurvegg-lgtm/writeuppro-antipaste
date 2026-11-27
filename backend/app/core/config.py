@@ -52,4 +52,15 @@ class Settings(BaseModel):
         os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "writeuppro.db")
     )
 
+    @property
+    def uploads_directory(self) -> str:
+        explicit = os.getenv("UPLOADS_PATH", "")
+        if explicit:
+            target = explicit
+        else:
+            db_dir = os.path.dirname(os.path.abspath(self.DATABASE_PATH))
+            target = os.path.join(db_dir, "uploads", "special_submissions")
+        os.makedirs(target, exist_ok=True)
+        return target
+
 settings = Settings()

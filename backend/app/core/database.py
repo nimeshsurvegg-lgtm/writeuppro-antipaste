@@ -142,7 +142,7 @@ def init_db():
         description TEXT,
         subject_id TEXT NOT NULL,
         faculty_id TEXT NOT NULL,
-        task_type TEXT NOT NULL CHECK(task_type IN ('Assignment', 'Experiment')),
+        task_type TEXT NOT NULL CHECK(task_type IN ('Assignment', 'Experiment', 'Special Document')),
         task_number TEXT NOT NULL,
         max_marks REAL NOT NULL,
         instructions TEXT,
@@ -162,7 +162,7 @@ def init_db():
         student_id TEXT NOT NULL,
         task_id TEXT,
         title TEXT NOT NULL,
-        doc_type TEXT NOT NULL CHECK(doc_type IN ('Assignment', 'Experiment')),
+        doc_type TEXT NOT NULL CHECK(doc_type IN ('Assignment', 'Experiment', 'Special Document')),
         subject_name TEXT NOT NULL,
         subject_code TEXT NOT NULL,
         doc_number TEXT NOT NULL,
@@ -288,8 +288,489 @@ def init_db():
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_notifications_user_unread ON notifications(user_id, is_read);")
 
     conn.commit()
+    run_schema_migrations(conn)
     seed_initial_data(conn)
     conn.close()
+
+def add_column_if_not_exists(cursor: sqlite3.Cursor, table: str, column_name: str, column_def: str):
+    """Safely adds a column to an existing SQLite table if it does not already exist."""
+    cursor.execute(f"PRAGMA table_info({table});")
+    existing_cols = [r[1] for r in cursor.fetchall()]
+    if column_name not in existing_cols:
+        cursor.execute(f"ALTER TABLE {table} ADD COLUMN {column_def};")
+
+def run_schema_migrations(conn: sqlite3.Connection):
+    """Executes safe, backward-compatible relational schema migrations."""
+    cursor = conn.cursor()
+    now_iso = datetime.now(timezone.utc).isoformat()
+
+    # 1. Academic Calendars / Years (Multi-Year Support: 2025-26, 2026-27, 2027-28)
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS academic_calendars (
+        id TEXT PRIMARY KEY,
+        code TEXT UNIQUE NOT NULL, -- e.g. '2026-27'
+        name TEXT NOT NULL,
+        start_date TEXT,
+        end_date TEXT,
+        is_current INTEGER NOT NULL DEFAULT 0,
+        status TEXT NOT NULL DEFAULT 'active' CHECK(status IN ('upcoming', 'active', 'completed', 'archived')),
+        created_at TEXT NOT NULL
+    );
+    """)
+
+    # 2. Academic Groups (BRANCH + YEAR + SEMESTER + DIVISION + ACADEMIC YEAR)
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS academic_groups (
+        id TEXT PRIMARY KEY,
+        academic_year TEXT NOT NULL,
+        branch_code TEXT NOT NULL,
+        year_level TEXT NOT NULL, -- FE, SE, TE, BE
+        semester_number INTEGER NOT NULL,
+        division_name TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        UNIQUE(academic_year, branch_code, year_level, semester_number, division_name)
+    );
+    """)
+
+    # 3. Curriculum Versions (Academic-Year-Specific Syllabus Scheme)
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS curriculum_versions (
+        id TEXT PRIMARY KEY,
+        academic_year TEXT NOT NULL,
+        branch_code TEXT NOT NULL,
+        year_level TEXT NOT NULL,
+        semester_number INTEGER NOT NULL,
+        scheme_name TEXT NOT NULL, -- e.g. "Mumbai University Rev-2019 'C' Scheme / NEP 2020"
+        status TEXT NOT NULL DEFAULT 'active' CHECK(status IN ('draft', 'published', 'active', 'completed', 'archived')),
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+    );
+    """)
+
+    # 4. Subject Allotments (Academic Group -> Subject -> Faculty)
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS subject_allotments (
+        id TEXT PRIMARY KEY,
+        academic_group_id TEXT NOT NULL,
+        subject_id TEXT NOT NULL,
+        faculty_id TEXT NOT NULL,
+        academic_year TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        FOREIGN KEY (subject_id) REFERENCES subjects(id) ON DELETE CASCADE,
+        FOREIGN KEY (faculty_id) REFERENCES users(id) ON DELETE CASCADE,
+        UNIQUE(academic_group_id, subject_id)
+    );
+    """)
+
+    # 5. Student Subject Enrollments (Compulsory Auto-Allotments + Approved Open Electives)
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS student_subject_enrollments (
+        id TEXT PRIMARY KEY,
+        student_id TEXT NOT NULL,
+        subject_id TEXT NOT NULL,
+        academic_year TEXT NOT NULL,
+        enrollment_type TEXT NOT NULL DEFAULT 'compulsory' CHECK(enrollment_type IN ('compulsory', 'open_elective')),
+        status TEXT NOT NULL DEFAULT 'enrolled' CHECK(status IN ('enrolled', 'dropped', 'completed')),
+        enrolled_at TEXT NOT NULL,
+        FOREIGN KEY (student_id) REFERENCES users(id) ON DELETE CASCADE,
+        FOREIGN KEY (subject_id) REFERENCES subjects(id) ON DELETE CASCADE,
+        UNIQUE(student_id, subject_id, academic_year)
+    );
+    """)
+
+    # 6. Open Elective Configurations & Student Selections
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS open_elective_configs (
+        id TEXT PRIMARY KEY,
+        academic_year TEXT NOT NULL,
+        branch_code TEXT NOT NULL,
+        year_level TEXT NOT NULL,
+        semester_number INTEGER NOT NULL,
+        subject_id TEXT NOT NULL,
+        faculty_id TEXT,
+        max_capacity INTEGER NOT NULL DEFAULT 60,
+        selection_start_date TEXT,
+        selection_end_date TEXT,
+        is_active INTEGER NOT NULL DEFAULT 1,
+        created_at TEXT NOT NULL,
+        FOREIGN KEY (subject_id) REFERENCES subjects(id) ON DELETE CASCADE,
+        FOREIGN KEY (faculty_id) REFERENCES users(id) ON DELETE SET NULL
+    );
+    """)
+
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS open_elective_selections (
+        id TEXT PRIMARY KEY,
+        student_id TEXT NOT NULL,
+        elective_config_id TEXT NOT NULL,
+        subject_id TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending', 'approved', 'rejected')),
+        admin_remarks TEXT,
+        selected_at TEXT NOT NULL,
+        reviewed_at TEXT,
+        FOREIGN KEY (student_id) REFERENCES users(id) ON DELETE CASCADE,
+        FOREIGN KEY (subject_id) REFERENCES subjects(id) ON DELETE CASCADE,
+        UNIQUE(student_id, subject_id)
+    );
+    """)
+
+    # 7. Laboratory Batches & Student/Faculty Allocation
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS lab_batches (
+        id TEXT PRIMARY KEY,
+        batch_name TEXT NOT NULL, -- e.g. Batch A1, Batch A2, Batch A3
+        academic_year TEXT NOT NULL,
+        branch_code TEXT NOT NULL,
+        year_level TEXT NOT NULL,
+        semester_number INTEGER NOT NULL,
+        division_name TEXT NOT NULL,
+        subject_id TEXT,
+        faculty_id TEXT,
+        capacity INTEGER NOT NULL DEFAULT 25,
+        status TEXT NOT NULL DEFAULT 'active' CHECK(status IN ('active', 'inactive', 'archived')),
+        created_at TEXT NOT NULL,
+        FOREIGN KEY (subject_id) REFERENCES subjects(id) ON DELETE SET NULL,
+        FOREIGN KEY (faculty_id) REFERENCES users(id) ON DELETE SET NULL
+    );
+    """)
+
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS batch_students (
+        id TEXT PRIMARY KEY,
+        batch_id TEXT NOT NULL,
+        student_id TEXT NOT NULL,
+        assigned_at TEXT NOT NULL,
+        FOREIGN KEY (batch_id) REFERENCES lab_batches(id) ON DELETE CASCADE,
+        FOREIGN KEY (student_id) REFERENCES users(id) ON DELETE CASCADE,
+        UNIQUE(batch_id, student_id)
+    );
+    """)
+
+    # 8. Student Academic Year Promotion Windows & Requests
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS promotion_windows (
+        id TEXT PRIMARY KEY,
+        title TEXT NOT NULL,
+        source_academic_year TEXT NOT NULL,
+        target_academic_year TEXT NOT NULL,
+        source_year_level TEXT NOT NULL,
+        target_year_level TEXT NOT NULL,
+        source_semester INTEGER NOT NULL,
+        target_semester INTEGER NOT NULL,
+        branch_code TEXT NOT NULL,
+        is_open INTEGER NOT NULL DEFAULT 0,
+        status TEXT NOT NULL DEFAULT 'open' CHECK(status IN ('draft', 'scheduled', 'open', 'closed', 'completed')),
+        start_date TEXT,
+        end_date TEXT,
+        opened_at TEXT,
+        closed_at TEXT,
+        created_at TEXT NOT NULL
+    );
+    """)
+
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS promotion_requests (
+        id TEXT PRIMARY KEY,
+        promotion_window_id TEXT NOT NULL,
+        student_id TEXT NOT NULL,
+        cgpa REAL NOT NULL,
+        current_year_level TEXT NOT NULL,
+        current_semester INTEGER NOT NULL,
+        current_division TEXT NOT NULL,
+        current_roll_number TEXT NOT NULL,
+        requested_division TEXT NOT NULL,
+        requested_roll_number TEXT NOT NULL,
+        approved_division TEXT,
+        approved_roll_number TEXT,
+        status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending', 'approved', 'rejected', 'resubmission')),
+        admin_remarks TEXT,
+        submitted_at TEXT NOT NULL,
+        reviewed_at TEXT,
+        FOREIGN KEY (promotion_window_id) REFERENCES promotion_windows(id) ON DELETE CASCADE,
+        FOREIGN KEY (student_id) REFERENCES users(id) ON DELETE CASCADE
+    );
+    """)
+
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS student_enrollment_history (
+        id TEXT PRIMARY KEY,
+        student_id TEXT NOT NULL,
+        academic_year TEXT NOT NULL,
+        year_level TEXT NOT NULL,
+        semester_number INTEGER NOT NULL,
+        branch_code TEXT NOT NULL,
+        division_name TEXT NOT NULL,
+        roll_number TEXT NOT NULL,
+        cgpa REAL,
+        archived_at TEXT NOT NULL,
+        FOREIGN KEY (student_id) REFERENCES users(id) ON DELETE CASCADE
+    );
+    """)
+
+    # 8B. Reevaluation Requests & Faculty Substitutions
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS reevaluation_requests (
+        id TEXT PRIMARY KEY,
+        submission_id TEXT NOT NULL,
+        task_id TEXT NOT NULL,
+        student_id TEXT NOT NULL,
+        faculty_id TEXT NOT NULL,
+        current_marks REAL NOT NULL,
+        reason TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending', 'approved', 'rejected')),
+        new_marks REAL,
+        faculty_remarks TEXT,
+        created_at TEXT NOT NULL,
+        reviewed_at TEXT,
+        FOREIGN KEY (submission_id) REFERENCES submissions(id) ON DELETE CASCADE,
+        FOREIGN KEY (student_id) REFERENCES users(id) ON DELETE CASCADE,
+        FOREIGN KEY (faculty_id) REFERENCES users(id) ON DELETE CASCADE
+    );
+    """)
+
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS faculty_substitutions (
+        id TEXT PRIMARY KEY,
+        original_faculty_id TEXT NOT NULL,
+        substitute_faculty_id TEXT NOT NULL,
+        subject_id TEXT NOT NULL,
+        division_name TEXT NOT NULL,
+        start_date TEXT NOT NULL,
+        end_date TEXT NOT NULL,
+        reason TEXT,
+        status TEXT NOT NULL DEFAULT 'active' CHECK(status IN ('active', 'completed', 'revoked')),
+        created_at TEXT NOT NULL,
+        FOREIGN KEY (original_faculty_id) REFERENCES users(id) ON DELETE CASCADE,
+        FOREIGN KEY (substitute_faculty_id) REFERENCES users(id) ON DELETE CASCADE,
+        FOREIGN KEY (subject_id) REFERENCES subjects(id) ON DELETE CASCADE
+    );
+    """)
+
+    # 9. Custom Rubrics for Special Documents (Mini Projects, Major Projects, Research Papers)
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS custom_rubrics (
+        id TEXT PRIMARY KEY,
+        faculty_id TEXT NOT NULL,
+        title TEXT NOT NULL,
+        document_category TEXT NOT NULL,
+        total_marks REAL NOT NULL,
+        criteria_json TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        FOREIGN KEY (faculty_id) REFERENCES users(id) ON DELETE CASCADE
+    );
+    """)
+
+    # Safe column additions to existing tables
+    # Subjects
+    add_column_if_not_exists(cursor, "subjects", "category", "category TEXT DEFAULT 'Core'")
+    add_column_if_not_exists(cursor, "subjects", "credits", "credits REAL DEFAULT 3.0")
+    add_column_if_not_exists(cursor, "subjects", "total_credits", "total_credits REAL DEFAULT 3.0")
+    add_column_if_not_exists(cursor, "subjects", "subject_type", "subject_type TEXT DEFAULT 'Theory'")
+    add_column_if_not_exists(cursor, "subjects", "teaching_hours", "teaching_hours INTEGER DEFAULT 4")
+    add_column_if_not_exists(cursor, "subjects", "syllabus_scheme", "syllabus_scheme TEXT DEFAULT 'Mumbai University Rev-2019 C Scheme'")
+    add_column_if_not_exists(cursor, "subjects", "academic_year", "academic_year TEXT DEFAULT '2026-27'")
+    add_column_if_not_exists(cursor, "subjects", "description", "description TEXT DEFAULT ''")
+    add_column_if_not_exists(cursor, "subjects", "status", "status TEXT DEFAULT 'active'")
+    add_column_if_not_exists(cursor, "subjects", "year_level", "year_level TEXT DEFAULT 'FE'")
+
+    # Tasks (Assignments, Experiments, Special Documents)
+    add_column_if_not_exists(cursor, "tasks", "academic_year", "academic_year TEXT DEFAULT '2026-27'")
+    add_column_if_not_exists(cursor, "tasks", "branch_code", "branch_code TEXT DEFAULT 'CE'")
+    add_column_if_not_exists(cursor, "tasks", "year_level", "year_level TEXT DEFAULT 'SE'")
+    add_column_if_not_exists(cursor, "tasks", "semester_number", "semester_number INTEGER DEFAULT 3")
+    add_column_if_not_exists(cursor, "tasks", "division_name", "division_name TEXT DEFAULT 'Div A'")
+    add_column_if_not_exists(cursor, "tasks", "target_type", "target_type TEXT DEFAULT 'division'")
+    add_column_if_not_exists(cursor, "tasks", "batch_id", "batch_id TEXT")
+    add_column_if_not_exists(cursor, "tasks", "category", "category TEXT DEFAULT 'standard'")
+    add_column_if_not_exists(cursor, "tasks", "task_category", "task_category TEXT DEFAULT 'standard'")
+    add_column_if_not_exists(cursor, "tasks", "document_category", "document_category TEXT")
+    add_column_if_not_exists(cursor, "tasks", "experiment_number", "experiment_number TEXT")
+    add_column_if_not_exists(cursor, "tasks", "objective", "objective TEXT")
+    add_column_if_not_exists(cursor, "tasks", "problem_statement", "problem_statement TEXT")
+    add_column_if_not_exists(cursor, "tasks", "hardware_software_req", "hardware_software_req TEXT")
+    add_column_if_not_exists(cursor, "tasks", "procedure", "procedure TEXT")
+    add_column_if_not_exists(cursor, "tasks", "expected_output", "expected_output TEXT")
+    add_column_if_not_exists(cursor, "tasks", "reference_file_url", "reference_file_url TEXT")
+    add_column_if_not_exists(cursor, "tasks", "late_submission_policy", "late_submission_policy TEXT DEFAULT 'accept'")
+    add_column_if_not_exists(cursor, "tasks", "late_penalty_percent", "late_penalty_percent REAL DEFAULT 0.0")
+    add_column_if_not_exists(cursor, "tasks", "custom_rubric_id", "custom_rubric_id TEXT")
+    # Special Submission Flexible Methods Configuration
+    add_column_if_not_exists(cursor, "tasks", "allowed_methods_json", "allowed_methods_json TEXT DEFAULT '[\"editor\", \"pdf\", \"docx\", \"other_files\", \"external_link\"]'")
+    add_column_if_not_exists(cursor, "tasks", "allow_multiple_methods", "allow_multiple_methods INTEGER DEFAULT 0")
+    add_column_if_not_exists(cursor, "tasks", "max_file_size_mb", "max_file_size_mb INTEGER DEFAULT 10")
+    add_column_if_not_exists(cursor, "tasks", "max_files_count", "max_files_count INTEGER DEFAULT 3")
+    add_column_if_not_exists(cursor, "tasks", "allowed_extensions_json", "allowed_extensions_json TEXT DEFAULT '[\"pdf\", \"docx\", \"doc\", \"zip\", \"pptx\", \"xlsx\", \"png\", \"jpg\", \"txt\"]'")
+    add_column_if_not_exists(cursor, "tasks", "require_pdf_conversion", "require_pdf_conversion INTEGER DEFAULT 0")
+    add_column_if_not_exists(cursor, "tasks", "allow_resubmission", "allow_resubmission INTEGER DEFAULT 1")
+    add_column_if_not_exists(cursor, "tasks", "allow_edit_before_deadline", "allow_edit_before_deadline INTEGER DEFAULT 1")
+
+    # Submissions (Delayed submission metrics & flexible submission content)
+    add_column_if_not_exists(cursor, "submissions", "delay_seconds", "delay_seconds INTEGER DEFAULT 0")
+    add_column_if_not_exists(cursor, "submissions", "delay_text", "delay_text TEXT DEFAULT 'On Time'")
+    add_column_if_not_exists(cursor, "submissions", "late_penalty_applied", "late_penalty_applied REAL DEFAULT 0.0")
+    add_column_if_not_exists(cursor, "submissions", "batch_id", "batch_id TEXT")
+    add_column_if_not_exists(cursor, "submissions", "submission_method", "submission_method TEXT DEFAULT 'editor'")
+    add_column_if_not_exists(cursor, "submissions", "external_link_url", "external_link_url TEXT")
+    add_column_if_not_exists(cursor, "submissions", "external_link_title", "external_link_title TEXT")
+    add_column_if_not_exists(cursor, "submissions", "external_link_description", "external_link_description TEXT")
+    add_column_if_not_exists(cursor, "submissions", "attachments_json", "attachments_json TEXT DEFAULT '[]'")
+    add_column_if_not_exists(cursor, "submissions", "faculty_private_notes", "faculty_private_notes TEXT")
+    add_column_if_not_exists(cursor, "submissions", "resubmission_count", "resubmission_count INTEGER DEFAULT 0")
+    add_column_if_not_exists(cursor, "submissions", "version_number", "version_number INTEGER DEFAULT 1")
+
+    # Documents (Special submission fields for drafts and authoring)
+    add_column_if_not_exists(cursor, "documents", "submission_method", "submission_method TEXT DEFAULT 'editor'")
+    add_column_if_not_exists(cursor, "documents", "external_link_url", "external_link_url TEXT")
+    add_column_if_not_exists(cursor, "documents", "external_link_title", "external_link_title TEXT")
+    add_column_if_not_exists(cursor, "documents", "external_link_description", "external_link_description TEXT")
+    add_column_if_not_exists(cursor, "documents", "attachments_json", "attachments_json TEXT DEFAULT '[]'")
+
+    # Table for securely stored file attachments
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS submission_attachments (
+        id TEXT PRIMARY KEY,
+        task_id TEXT,
+        document_id TEXT,
+        submission_id TEXT,
+        student_id TEXT NOT NULL,
+        original_filename TEXT NOT NULL,
+        stored_filename TEXT NOT NULL,
+        file_size INTEGER NOT NULL,
+        mime_type TEXT NOT NULL,
+        file_path TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        FOREIGN KEY (student_id) REFERENCES users(id) ON DELETE CASCADE
+    );
+    """)
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_sub_att_task ON submission_attachments(task_id);")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_sub_att_doc ON submission_attachments(document_id);")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_sub_att_sub ON submission_attachments(submission_id);")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_sub_att_stu ON submission_attachments(student_id);")
+
+    # Promotion windows state enhancements
+    add_column_if_not_exists(cursor, "promotion_windows", "status", "status TEXT DEFAULT 'open'")
+    add_column_if_not_exists(cursor, "promotion_windows", "start_date", "start_date TEXT")
+    add_column_if_not_exists(cursor, "promotion_windows", "end_date", "end_date TEXT")
+    add_column_if_not_exists(cursor, "promotion_windows", "updated_at", "updated_at TEXT")
+
+    # Tasks deadline extension support
+    add_column_if_not_exists(cursor, "tasks", "original_due_date", "original_due_date TEXT")
+    add_column_if_not_exists(cursor, "tasks", "extension_reason", "extension_reason TEXT")
+
+    # Evaluations re-evaluation tracking
+    add_column_if_not_exists(cursor, "evaluations", "reevaluation_status", "reevaluation_status TEXT")
+    add_column_if_not_exists(cursor, "evaluations", "reevaluation_reason", "reevaluation_reason TEXT")
+
+    # Student Profiles
+    add_column_if_not_exists(cursor, "student_profiles", "academic_year", "academic_year TEXT DEFAULT '2026-27'")
+    add_column_if_not_exists(cursor, "student_profiles", "cgpa", "cgpa REAL DEFAULT 0.0")
+    add_column_if_not_exists(cursor, "student_profiles", "is_verified", "is_verified INTEGER DEFAULT 1")
+    add_column_if_not_exists(cursor, "student_profiles", "verification_status", "verification_status TEXT DEFAULT 'verified'")
+
+    # High performance indexes for new relations
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_academic_groups ON academic_groups(academic_year, branch_code, year_level, semester_number, division_name);")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_subject_allotments_grp ON subject_allotments(academic_group_id);")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_subject_allotments_fac ON subject_allotments(faculty_id);")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_enrollments_stu ON student_subject_enrollments(student_id);")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_enrollments_sub ON student_subject_enrollments(subject_id);")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_batches_grp ON lab_batches(academic_year, branch_code, division_name);")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_batch_students_stu ON batch_students(student_id);")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_promotion_requests_stu ON promotion_requests(student_id);")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_custom_rubrics_fac ON custom_rubrics(faculty_id);")
+
+    # Seed Academic Calendars
+    cursor.execute("""
+    INSERT OR IGNORE INTO academic_calendars (id, code, name, start_date, end_date, is_current, status, created_at)
+    VALUES
+        ('ay_2025_26', '2025-26', 'Academic Year 2025-26 (Completed / Archived)', '2025-07-01', '2026-06-30', 0, 'archived', ?),
+        ('ay_2026_27', '2026-27', 'Academic Year 2026-27 (Current Active Cycle)', '2026-07-01', '2027-06-30', 1, 'active', ?),
+        ('ay_2027_28', '2027-28', 'Academic Year 2027-28 (Upcoming Cycle)', '2027-07-01', '2028-06-30', 0, 'upcoming', ?);
+    """, (now_iso, now_iso, now_iso))
+
+    # Safe Table Migrations for Special Document Support
+    cursor.execute("SELECT sql FROM sqlite_master WHERE type='table' AND name='tasks';")
+    tasks_sql = cursor.fetchone()
+    if tasks_sql and "Special Document" not in tasks_sql[0]:
+        cursor.execute("PRAGMA foreign_keys=OFF;")
+        cursor.execute("""
+        CREATE TABLE tasks_new (
+            id TEXT PRIMARY KEY,
+            title TEXT NOT NULL,
+            description TEXT,
+            subject_id TEXT NOT NULL,
+            faculty_id TEXT NOT NULL,
+            task_type TEXT NOT NULL CHECK(task_type IN ('Assignment', 'Experiment', 'Special Document')),
+            task_number TEXT NOT NULL DEFAULT '1',
+            max_marks REAL NOT NULL DEFAULT 10.0,
+            instructions TEXT,
+            due_date TEXT NOT NULL,
+            rubric_json TEXT NOT NULL DEFAULT '[]',
+            status TEXT NOT NULL DEFAULT 'published',
+            created_at TEXT NOT NULL,
+            academic_year TEXT DEFAULT '2026-27',
+            branch_code TEXT DEFAULT 'CE',
+            year_level TEXT DEFAULT 'SE',
+            semester_number INTEGER DEFAULT 3,
+            division_name TEXT DEFAULT 'Div A',
+            target_type TEXT DEFAULT 'division',
+            batch_id TEXT,
+            category TEXT DEFAULT 'standard',
+            task_category TEXT DEFAULT 'standard',
+            document_category TEXT,
+            experiment_number TEXT,
+            objective TEXT,
+            problem_statement TEXT,
+            hardware_software_req TEXT,
+            procedure TEXT,
+            expected_output TEXT,
+            reference_file_url TEXT,
+            late_submission_policy TEXT DEFAULT 'accept',
+            late_penalty_percent REAL DEFAULT 0.0,
+            custom_rubric_id TEXT,
+            FOREIGN KEY (subject_id) REFERENCES subjects(id) ON DELETE CASCADE,
+            FOREIGN KEY (faculty_id) REFERENCES users(id) ON DELETE CASCADE
+        );
+        """)
+        cursor.execute("PRAGMA table_info(tasks);")
+        old_cols = [c[1] for c in cursor.fetchall()]
+        col_list = ", ".join(old_cols)
+        cursor.execute(f"INSERT INTO tasks_new ({col_list}) SELECT {col_list} FROM tasks;")
+        cursor.execute("DROP TABLE tasks;")
+        cursor.execute("ALTER TABLE tasks_new RENAME TO tasks;")
+        cursor.execute("PRAGMA foreign_keys=ON;")
+
+    cursor.execute("SELECT sql FROM sqlite_master WHERE type='table' AND name='documents';")
+    docs_sql = cursor.fetchone()
+    if docs_sql and "Special Document" not in docs_sql[0]:
+        cursor.execute("PRAGMA foreign_keys=OFF;")
+        cursor.execute("""
+        CREATE TABLE documents_new (
+            id TEXT PRIMARY KEY,
+            student_id TEXT NOT NULL,
+            task_id TEXT,
+            title TEXT NOT NULL,
+            doc_type TEXT NOT NULL CHECK(doc_type IN ('Assignment', 'Experiment', 'Special Document')),
+            subject_name TEXT NOT NULL,
+            subject_code TEXT NOT NULL,
+            doc_number TEXT NOT NULL DEFAULT '1',
+            content_html TEXT NOT NULL,
+            word_count INTEGER NOT NULL DEFAULT 0,
+            status TEXT NOT NULL DEFAULT 'draft' CHECK(status IN ('draft', 'submitted', 'graded', 'returned')),
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL,
+            FOREIGN KEY (student_id) REFERENCES users(id) ON DELETE CASCADE,
+            FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE SET NULL
+        );
+        """)
+        cursor.execute("PRAGMA table_info(documents);")
+        old_cols = [c[1] for c in cursor.fetchall()]
+        col_list = ", ".join(old_cols)
+        cursor.execute(f"INSERT INTO documents_new ({col_list}) SELECT {col_list} FROM documents;")
+        cursor.execute("DROP TABLE documents;")
+        cursor.execute("ALTER TABLE documents_new RENAME TO documents;")
+        cursor.execute("PRAGMA foreign_keys=ON;")
+
+    conn.commit()
 
 def seed_initial_data(conn: sqlite3.Connection):
     """Populates the database with initial departments, subjects, default users, tasks, and sample submissions."""
@@ -359,9 +840,7 @@ def seed_initial_data(conn: sqlite3.Connection):
     users = [
         ("user_admin", "admin", "admin@writeuppro.edu", "System Administrator", pw_hash, "admin", "active", now_iso, now_iso),
         ("user_faculty", "faculty", "faculty@writeuppro.edu", "Prof. Elizabeth Smith", pw_hash, "faculty", "active", now_iso, now_iso),
-        ("user_student", "student", "student@writeuppro.edu", "Demo Student", pw_hash, "student", "active", now_iso, now_iso),
-        ("user_student2", "student2", "alex@writeuppro.edu", "Alex Turner", pw_hash, "student", "active", now_iso, now_iso),
-        ("user_student3", "student3", "sarah@writeuppro.edu", "Sarah Jenkins", pw_hash, "student", "active", now_iso, now_iso)
+        ("user_student", "student", "student@writeuppro.edu", "Demo Student", pw_hash, "student", "active", now_iso, now_iso)
     ]
     cursor.executemany("INSERT OR IGNORE INTO users (id, username, email, full_name, hashed_password, role, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);", users)
 
@@ -371,163 +850,11 @@ def seed_initial_data(conn: sqlite3.Connection):
     VALUES (?, ?, ?, ?, ?);
     """, ("user_faculty", "FAC-9021", "CE", "Associate Professor", now_iso))
 
-    # Assign Faculty to Subjects
-    assignments = [
-        ("fa_1", "user_faculty", "sub_se_ds", "Div A"),
-        ("fa_2", "user_faculty", "sub_se_db", "Div A"),
-        ("fa_3", "user_faculty", "sub_se_co", "Div A")
-    ]
-    cursor.executemany("INSERT OR IGNORE INTO faculty_assignments (id, faculty_id, subject_id, division_name) VALUES (?, ?, ?, ?);", assignments)
-
-    # Seed Student Profiles
+    # Seed Student Profile
     cursor.execute("""
     INSERT OR IGNORE INTO student_profiles (user_id, roll_number, prn, year_level, branch_code, semester_number, division_name, elective_subject, status, created_at, updated_at)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
-    """, ("user_student", "21CE104", "PRN202600104", "SE", "CE", 3, "Div A", "Beginner French", "approved", now_iso, now_iso))
-
-    cursor.execute("""
-    INSERT OR IGNORE INTO student_profiles (user_id, roll_number, prn, year_level, branch_code, semester_number, division_name, elective_subject, status, created_at, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
-    """, ("user_student2", "21CE108", "PRN202600108", "SE", "CE", 3, "Div A", "Beginner Germany", "pending", now_iso, now_iso))
-
-    cursor.execute("""
-    INSERT OR IGNORE INTO student_profiles (user_id, roll_number, prn, year_level, branch_code, semester_number, division_name, elective_subject, status, created_at, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
-    """, ("user_student3", "21CE112", "PRN202600112", "SE", "CE", 3, "Div A", "Digital Video Recording", "approved", now_iso, now_iso))
-
-    # Seed Initial Tasks
-    default_assignment_rubric = json.dumps([
-        {"criteria": "Knowledge & Conceptual Understanding", "max": 4.0, "guidance": "Clarity of theoretical principles and context"},
-        {"criteria": "Content, Neatness & Structure", "max": 3.0, "guidance": "Depth of solution, adherence to template and readability"},
-        {"criteria": "Punctuality & Academic Timeliness", "max": 3.0, "guidance": "Submission strictly before deadline"}
-    ])
-
-    default_experiment_rubric = json.dumps([
-        {"criteria": "Knowledge & Theory", "max": 4.0, "guidance": "Understanding of algorithm, apparatus and objectives"},
-        {"criteria": "Implementation & Performance", "max": 5.0, "guidance": "Correct execution, diagram completeness and code structure"},
-        {"criteria": "Content & Observations", "max": 3.0, "guidance": "Tabulation of results, observations and precision"},
-        {"criteria": "Punctuality & Timeliness", "max": 3.0, "guidance": "Submission strictly before deadline"}
-    ])
-
-    tasks = [
-        (
-            "task_assign_1",
-            "Assignment 1: Relational Data Modelling & Normalization",
-            "Explain 1NF, 2NF, 3NF and BCNF with real-world enterprise database examples.",
-            "sub_se_db",
-            "user_faculty",
-            "Assignment",
-            "1",
-            10.0,
-            "Document must contain theoretical explanations, ER diagrams drawn in canvas, and table schemas.",
-            "2026-12-05T23:59:59Z",
-            default_assignment_rubric,
-            "published",
-            now_iso
-        ),
-        (
-            "task_expt_1",
-            "Experiment 1: Balanced Binary Search Trees (AVL & Red-Black)",
-            "Implement rotations and balance factor calculations for self-balancing search trees.",
-            "sub_se_ds",
-            "user_faculty",
-            "Experiment",
-            "1",
-            15.0,
-            "Include algorithm steps, tree rotation diagrams drawn in canvas, complete code, and output verification table.",
-            "2026-12-10T23:59:59Z",
-            default_experiment_rubric,
-            "published",
-            now_iso
-        )
-    ]
-    cursor.executemany("""
-    INSERT OR IGNORE INTO tasks (id, title, description, subject_id, faculty_id, task_type, task_number, max_marks, instructions, due_date, rubric_json, status, created_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
-    """, tasks)
-
-    # Seed Sample Seed Documents & Submissions for immediate testing
-    sample_content_1 = """<h2>Aim</h2><p>To design and implement a normalized relational database schema satisfying Third Normal Form (3NF).</p><h2>Theory & Methodology</h2><p>Normalization reduces data redundancy and prevents update anomalies. First Normal Form requires atomic attributes. Second Normal Form eliminates partial key dependencies. Third Normal Form guarantees no transitive dependencies exist.</p><h2>Functional Dependencies</h2><table><tr><th>Relation</th><th>Candidate Key</th><th>Determinant</th><th>Normal Form</th></tr><tr><td>Students</td><td>Roll_No</td><td>Roll_No -> Department</td><td>3NF</td></tr><tr><td>Courses</td><td>Course_Code</td><td>Course_Code -> Credits</td><td>3NF</td></tr></table><h2>Conclusion</h2><p>The schema was normalized to 3NF without information loss, ensuring referential integrity and zero update anomalies.</p>"""
-
-    cursor.execute("""
-    INSERT OR IGNORE INTO documents (id, student_id, task_id, title, doc_type, subject_name, subject_code, doc_number, content_html, word_count, status, created_at, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
-    """, (
-        "doc_sample_1",
-        "user_student",
-        "task_assign_1",
-        "Assignment 1: Relational Data Modelling & Normalization",
-        "Assignment",
-        "Database management system",
-        "CE-DB201",
-        "1",
-        sample_content_1,
-        145,
-        "graded",
-        now_iso,
-        now_iso
-    ))
-
-    # Seed Initial Submission
-    cursor.execute("""
-    INSERT OR IGNORE INTO submissions (id, document_id, task_id, student_id, submission_code, snapshot_html, submission_date, is_late, status, created_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
-    """, (
-        "sub_sample_1",
-        "doc_sample_1",
-        "task_assign_1",
-        "user_student",
-        "SUB-2026-IIET-9014",
-        sample_content_1,
-        "2026-11-20 14:30:00",
-        0,
-        "graded",
-        now_iso
-    ))
-
-    # Seed Evaluation
-    eval_rubric = json.dumps({"knowledge": 4.0, "content": 3.0, "punctuality": 2.5})
-    cursor.execute("""
-    INSERT OR IGNORE INTO evaluations (id, submission_id, faculty_id, marks_awarded, max_marks, rubric_scores_json, feedback, remarks, digital_signature_code, status, evaluated_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
-    """, (
-        "eval_sample_1",
-        "sub_sample_1",
-        "user_faculty",
-        9.5,
-        10.0,
-        eval_rubric,
-        "Excellent theoretical analysis and well-structured dependency table.",
-        "Approved with honors",
-        "SIG-FAC9021-IIET-88392",
-        "approved",
-        now_iso
-    ))
-
-    # Seed Notifications
-    notifications = [
-        ("notif_1", "user_student", "Document Evaluated", "Your Assignment 1 has been evaluated by Prof. Elizabeth Smith with 9.5/10 marks.", "success", "/student/evaluations", 0, now_iso),
-        ("notif_2", "user_student", "Registration Approved", "Your academic profile for SE CE (Div A) has been verified and approved by the Administrator.", "info", "/student", 1, now_iso),
-        ("notif_3", "user_faculty", "New Submission Received", "Student Demo Student submitted Assignment 1: Relational Data Modelling.", "info", "/faculty/classroom", 0, now_iso),
-        ("notif_4", "user_admin", "Registration Pending Review", "Student Alex Turner registered for SE CE (Div A) and is awaiting administrator verification.", "alert", "/admin/registrations", 0, now_iso)
-    ]
-    cursor.executemany("INSERT OR IGNORE INTO notifications (id, user_id, title, message, type, link, is_read, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?);", notifications)
-
-    # Seed a sample integrity event
-    cursor.execute("""
-    INSERT OR IGNORE INTO integrity_events (id, student_id, document_id, event_type, severity, metadata_json, review_status, admin_remarks, timestamp)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
-    """, (
-        "ie_sample_1",
-        "user_student2",
-        None,
-        "paste_attempt",
-        "medium",
-        json.dumps({"attempted_chars": 482, "source": "external_clipboard", "action": "blocked"}),
-        "pending",
-        "Paste blocked by security policy.",
-        now_iso
-    ))
+    """, ("user_student", "21CE104", "PRN202600104", "SE", "CE", 3, "Div A", "Data Compression", "approved", now_iso, now_iso))
 
     conn.commit()
 

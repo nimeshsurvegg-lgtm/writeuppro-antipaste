@@ -40,7 +40,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
   const [docLoading, setDocLoading] = useState<boolean>(Boolean(docId));
   const [docError, setDocError] = useState<string | null>(null);
   const [title, setTitle] = useState('');
-  const [docType, setDocType] = useState<'Assignment' | 'Experiment'>('Assignment');
+  const [docType, setDocType] = useState<'Assignment' | 'Experiment' | 'Special Document'>('Assignment');
   const [subject, setSubject] = useState('');
   const [subjectCode, setSubjectCode] = useState('');
   const [docNumber, setDocNumber] = useState('1');
@@ -84,9 +84,10 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
     try {
       const hierarchy = await api.academic.getHierarchy();
       setSubjectList(hierarchy.subjects || []);
-      if (!subject && hierarchy.subjects.length > 0) {
-        setSubject(hierarchy.subjects[0].name);
-        setSubjectCode(hierarchy.subjects[0].code);
+      // Only set default subject for brand new unlinked drafts when docId is null
+      if (!currentDocIdRef.current && !docId) {
+        setSubject((prev) => prev || (hierarchy.subjects.length > 0 ? hierarchy.subjects[0].name : ''));
+        setSubjectCode((prev) => prev || (hierarchy.subjects.length > 0 ? hierarchy.subjects[0].code : ''));
       }
     } catch (e) {
       console.error('Failed to load subjects', e);
@@ -424,20 +425,13 @@ public class AcademicAlgorithm {
     try {
       setIsSubmitting(true);
 
-      // Force save latest changes to ensure database persistence before submitting
+      // Always guarantee the document is persisted in the database prior to final submission
       let targetDocId = currentDocIdRef.current || docId || doc?.id;
-      if (hasUnsavedChanges || !targetDocId || isSavingRef.current) {
-        const saveResult = await saveDocument(true);
-        if (!saveResult.success || !saveResult.docId) {
-          showToast(saveResult.error || 'Failed to save document before final submission.', 'error');
-          setIsSubmitting(false);
-          return;
-        }
+      const saveResult = await saveDocument(true);
+      if (saveResult.success && saveResult.docId) {
         targetDocId = saveResult.docId;
-      }
-
-      if (!targetDocId) {
-        showToast('Save document before final submission.', 'error');
+      } else if (!targetDocId) {
+        showToast(saveResult.error || 'Please ensure document is saved before final submission.', 'error');
         setIsSubmitting(false);
         return;
       }
@@ -552,6 +546,7 @@ public class AcademicAlgorithm {
             >
               <option value="Assignment">Assignment</option>
               <option value="Experiment">Practical Experiment</option>
+              <option value="Special Document">Special Document</option>
             </select>
 
             <select
@@ -763,13 +758,83 @@ public class AcademicAlgorithm {
               {/* Rubric Matrix */}
               <div className="mb-6 font-mono">
                 <span className="text-[9px] font-bold uppercase tracking-widest text-[#B84915] block mb-1">
-                  EVALUATION RUBRIC CRITERIA MATRIX // {docType === 'Assignment' ? 'MAX 10 MARKS' : 'MAX 15 MARKS'}
+                  EVALUATION RUBRIC CRITERIA MATRIX // {docType === 'Special Document' || (doc as any)?.custom_rubric ? ((doc as any)?.custom_rubric?.title || 'SPECIAL DOCUMENT CUSTOM RUBRIC') : docType === 'Assignment' ? 'MAX 10 MARKS' : 'MAX 15 MARKS'}
                 </span>
                 {(() => {
                   const rubrics = doc?.rubric_scores || (doc?.rubric_scores_json ? (() => { try { return JSON.parse(doc.rubric_scores_json); } catch { return {}; } })() : {});
-                  const totalMarks = doc?.marks ?? doc?.marks_awarded ?? null;
+                  const customRubric = (doc as any)?.custom_rubric;
 
+                  // Helper for matching score by criterion ID or name
+                  const findScore = (key: string, name?: string) => {
+                    if (!rubrics || typeof rubrics !== 'object') return null;
+                    if (rubrics[key] !== undefined && rubrics[key] !== null) return Number(rubrics[key]);
+                    if (name && rubrics[name] !== undefined && rubrics[name] !== null) return Number(rubrics[name]);
+                    const searchStr = (name || key).toLowerCase().replace(/[^a-z0-9]/g, '');
+                    for (const [k, v] of Object.entries(rubrics)) {
+                      const cleanK = k.toLowerCase().replace(/[^a-z0-9]/g, '');
+                      if (cleanK === searchStr || cleanK.includes(searchStr) || searchStr.includes(cleanK)) {
+                        return Number(v);
+                      }
+                    }
+                    return null;
+                  };
+
+                  // 1. Special Document with Custom Rubric
+                  if (customRubric && customRubric.criteria && customRubric.criteria.length > 0) {
+                    const criteria = customRubric.criteria;
+                    const maxTotal = criteria.reduce((sum: number, c: any) => sum + (Number(c.max_score || c.max_marks) || 0), 0);
+                    let sumAwarded: number | null = null;
+
+                    return (
+                      <table className="w-full text-xs border-collapse border-2 border-[#1A1209] text-center font-mono">
+                        <thead>
+                          <tr className="bg-[#FAF6EE] font-bold border-b-2 border-[#1A1209]">
+                            <th className="border-2 border-[#1A1209] p-2 text-left">Criterion</th>
+                            <th className="border-2 border-[#1A1209] p-2 text-left">Evaluation Guidance</th>
+                            <th className="border-2 border-[#1A1209] p-2 w-24">Max Score</th>
+                            <th className="border-2 border-[#1A1209] p-2 w-24">Awarded</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {criteria.map((c: any, idx: number) => {
+                            const cKey = c.id || c.name || `crit_${idx}`;
+                            const cMax = Number(c.max_score || c.max_marks || 0);
+                            const awarded = findScore(cKey, c.name);
+                            if (awarded !== null) {
+                              sumAwarded = (sumAwarded || 0) + awarded;
+                            }
+                            return (
+                              <tr key={cKey} className={idx % 2 === 1 ? 'bg-[#FAF6EE]/50' : ''}>
+                                <td className="border-2 border-[#1A1209] p-2 text-left font-bold">{c.name}</td>
+                                <td className="border-2 border-[#1A1209] p-2 text-left text-[11px] text-[#5C4D3C]">{c.guidance || c.description || '—'}</td>
+                                <td className="border-2 border-[#1A1209] p-2 font-bold">{cMax}</td>
+                                <td className="border-2 border-[#1A1209] p-2 font-bold text-[#B84915]">
+                                  {awarded !== null ? `${awarded} / ${cMax}` : '—'}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                          <tr className="bg-[#FAF6EE] font-bold border-t-2 border-[#1A1209]">
+                            <td className="border-2 border-[#1A1209] p-2 text-left font-black" colSpan={3}>
+                              TOTAL EVALUATION SCORE (MAX {maxTotal})
+                            </td>
+                            <td className="border-2 border-[#1A1209] p-2 font-black text-sm text-[#1A1209]">
+                              {(doc?.marks ?? doc?.marks_awarded ?? sumAwarded) !== null ? `${(doc?.marks ?? doc?.marks_awarded ?? sumAwarded)} / ${maxTotal}` : '—'}
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    );
+                  }
+
+                  // 2. Standard Assignment (Max 10)
                   if (docType === 'Assignment') {
+                    const kScore = findScore('knowledge', 'Knowledge & Understanding') ?? findScore('knowledge', 'Knowledge & Theory');
+                    const cScore = findScore('content', 'Content Structure & Neatness') ?? findScore('content', 'Content & Observations');
+                    const pScore = findScore('punctuality', 'Academic Punctuality');
+                    const calcSum = (kScore !== null && cScore !== null && pScore !== null) ? (kScore + cScore + pScore) : null;
+                    const finalTotal = doc?.marks ?? doc?.marks_awarded ?? calcSum;
+
                     return (
                       <table className="w-full text-xs border-collapse border-2 border-[#1A1209] text-center font-mono">
                         <thead>
@@ -778,7 +843,7 @@ public class AcademicAlgorithm {
                             <th className="border-2 border-[#1A1209] p-2">Below Exp.</th>
                             <th className="border-2 border-[#1A1209] p-2">Average</th>
                             <th className="border-2 border-[#1A1209] p-2">Good</th>
-                            <th className="border-2 border-[#1A1209] p-2 w-20">Awarded</th>
+                            <th className="border-2 border-[#1A1209] p-2 w-24">Awarded</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -788,7 +853,7 @@ public class AcademicAlgorithm {
                             <td className="border-2 border-[#1A1209] p-2">3</td>
                             <td className="border-2 border-[#1A1209] p-2">4</td>
                             <td className="border-2 border-[#1A1209] p-2 font-bold text-[#B84915]">
-                              {rubrics.knowledge !== undefined && rubrics.knowledge !== null ? `${rubrics.knowledge} / 4` : '—'}
+                              {kScore !== null ? `${kScore} / 4` : '—'}
                             </td>
                           </tr>
                           <tr className="bg-[#FAF6EE]/50">
@@ -797,7 +862,7 @@ public class AcademicAlgorithm {
                             <td className="border-2 border-[#1A1209] p-2">2</td>
                             <td className="border-2 border-[#1A1209] p-2">3</td>
                             <td className="border-2 border-[#1A1209] p-2 font-bold text-[#B84915]">
-                              {rubrics.content !== undefined && rubrics.content !== null ? `${rubrics.content} / 3` : '—'}
+                              {cScore !== null ? `${cScore} / 3` : '—'}
                             </td>
                           </tr>
                           <tr>
@@ -806,7 +871,7 @@ public class AcademicAlgorithm {
                             <td className="border-2 border-[#1A1209] p-2">2</td>
                             <td className="border-2 border-[#1A1209] p-2">3</td>
                             <td className="border-2 border-[#1A1209] p-2 font-bold text-[#B84915]">
-                              {rubrics.punctuality !== undefined && rubrics.punctuality !== null ? `${rubrics.punctuality} / 3` : '—'}
+                              {pScore !== null ? `${pScore} / 3` : '—'}
                             </td>
                           </tr>
                           <tr className="bg-[#FAF6EE] font-bold border-t-2 border-[#1A1209]">
@@ -814,13 +879,21 @@ public class AcademicAlgorithm {
                               TOTAL EVALUATION SCORE (MAX 10)
                             </td>
                             <td className="border-2 border-[#1A1209] p-2 font-black text-sm text-[#1A1209]">
-                              {totalMarks !== null ? `${totalMarks} / 10` : '—'}
+                              {finalTotal !== null ? `${finalTotal} / 10` : '—'}
                             </td>
                           </tr>
                         </tbody>
                       </table>
                     );
                   }
+
+                  // 3. Laboratory Experiment (Max 15)
+                  const kScore = findScore('knowledge', 'Knowledge & Theory');
+                  const perfScore = findScore('performance', 'Performance & Implementation') ?? findScore('performance', 'Practical Execution & Performance');
+                  const cScore = findScore('content', 'Content & Observations') ?? findScore('content', 'Content Structure & Neatness');
+                  const pScore = findScore('punctuality', 'Academic Punctuality');
+                  const calcSum = (kScore !== null && perfScore !== null && cScore !== null && pScore !== null) ? (kScore + perfScore + cScore + pScore) : null;
+                  const finalTotal = doc?.marks ?? doc?.marks_awarded ?? calcSum;
 
                   return (
                     <table className="w-full text-xs border-collapse border-2 border-[#1A1209] text-center font-mono">
@@ -830,7 +903,7 @@ public class AcademicAlgorithm {
                           <th className="border-2 border-[#1A1209] p-2">Below Exp.</th>
                           <th className="border-2 border-[#1A1209] p-2">Average</th>
                           <th className="border-2 border-[#1A1209] p-2">Good</th>
-                          <th className="border-2 border-[#1A1209] p-2 w-20">Awarded</th>
+                          <th className="border-2 border-[#1A1209] p-2 w-24">Awarded</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -840,7 +913,7 @@ public class AcademicAlgorithm {
                           <td className="border-2 border-[#1A1209] p-2">3</td>
                           <td className="border-2 border-[#1A1209] p-2">4</td>
                           <td className="border-2 border-[#1A1209] p-2 font-bold text-[#B84915]">
-                            {rubrics.knowledge !== undefined && rubrics.knowledge !== null ? `${rubrics.knowledge} / 4` : '—'}
+                            {kScore !== null ? `${kScore} / 4` : '—'}
                           </td>
                         </tr>
                         <tr className="bg-[#FAF6EE]/50">
@@ -849,7 +922,7 @@ public class AcademicAlgorithm {
                           <td className="border-2 border-[#1A1209] p-2">3</td>
                           <td className="border-2 border-[#1A1209] p-2">5</td>
                           <td className="border-2 border-[#1A1209] p-2 font-bold text-[#B84915]">
-                            {rubrics.performance !== undefined && rubrics.performance !== null ? `${rubrics.performance} / 5` : '—'}
+                            {perfScore !== null ? `${perfScore} / 5` : '—'}
                           </td>
                         </tr>
                         <tr>
@@ -858,7 +931,7 @@ public class AcademicAlgorithm {
                           <td className="border-2 border-[#1A1209] p-2">2</td>
                           <td className="border-2 border-[#1A1209] p-2">3</td>
                           <td className="border-2 border-[#1A1209] p-2 font-bold text-[#B84915]">
-                            {rubrics.content !== undefined && rubrics.content !== null ? `${rubrics.content} / 3` : '—'}
+                            {cScore !== null ? `${cScore} / 3` : '—'}
                           </td>
                         </tr>
                         <tr className="bg-[#FAF6EE]/50">
@@ -867,7 +940,7 @@ public class AcademicAlgorithm {
                           <td className="border-2 border-[#1A1209] p-2">2</td>
                           <td className="border-2 border-[#1A1209] p-2">3</td>
                           <td className="border-2 border-[#1A1209] p-2 font-bold text-[#B84915]">
-                            {rubrics.punctuality !== undefined && rubrics.punctuality !== null ? `${rubrics.punctuality} / 3` : '—'}
+                            {pScore !== null ? `${pScore} / 3` : '—'}
                           </td>
                         </tr>
                         <tr className="bg-[#FAF6EE] font-bold border-t-2 border-[#1A1209]">
@@ -875,7 +948,7 @@ public class AcademicAlgorithm {
                             TOTAL EVALUATION SCORE (MAX 15)
                           </td>
                           <td className="border-2 border-[#1A1209] p-2 font-black text-sm text-[#1A1209]">
-                            {totalMarks !== null ? `${totalMarks} / 15` : '—'}
+                            {finalTotal !== null ? `${finalTotal} / 15` : '—'}
                           </td>
                         </tr>
                       </tbody>

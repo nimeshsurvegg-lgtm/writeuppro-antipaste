@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import {
   Sun, Moon, Bell, LogOut, Shield, Award, GraduationCap, CheckCircle,
-  AlertCircle, X, ChevronRight, Lock, User as UserIcon
+  AlertCircle, X, ChevronRight, Lock, User as UserIcon, Menu
 } from 'lucide-react';
 import { api, setAuthToken, removeAuthToken, getAuthToken } from './lib/api';
 import { User, AppNotification } from './types';
+import { Sidebar } from './components/Sidebar';
 import { StudentWorkspace } from './components/StudentWorkspace';
 import { DocumentEditor } from './components/DocumentEditor';
 import { FacultyWorkspace } from './components/FacultyWorkspace';
@@ -21,6 +22,15 @@ export const App: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
   const [activeDocId, setActiveDocId] = useState<string | null | undefined>(undefined);
+  const [activeTab, setActiveTab] = useState<string>('overview');
+  const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('writeuppro_sidebar_collapsed') === 'true';
+    } catch {
+      return false;
+    }
+  });
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [unreadCount, setUnreadCount] = useState<number>(0);
   const [showNotifications, setShowNotifications] = useState<boolean>(false);
@@ -39,9 +49,15 @@ export const App: React.FC = () => {
   // Initialize theme, current session, and session listeners
   useEffect(() => {
     const savedTheme = localStorage.getItem('writeuppro_theme');
-    if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+    if (savedTheme === 'dark') {
       setIsDarkMode(true);
       document.documentElement.classList.add('dark');
+    } else {
+      setIsDarkMode(false);
+      document.documentElement.classList.remove('dark');
+      if (!savedTheme) {
+        localStorage.setItem('writeuppro_theme', 'light');
+      }
     }
 
     const token = getAuthToken();
@@ -97,10 +113,25 @@ export const App: React.FC = () => {
     }, 4000);
   };
 
+  const toggleSidebarCollapse = () => {
+    const next = !isSidebarCollapsed;
+    setIsSidebarCollapsed(next);
+    try {
+      localStorage.setItem('writeuppro_sidebar_collapsed', String(next));
+    } catch {}
+  };
+
+  const syncDefaultTab = (userRole: string) => {
+    if (userRole === 'student') setActiveTab('overview');
+    else if (userRole === 'faculty') setActiveTab('my_classes');
+    else if (userRole === 'admin') setActiveTab('academic_classes');
+  };
+
   const loadCurrentUser = async () => {
     try {
       const user = await api.auth.me();
       setCurrentUser(user);
+      syncDefaultTab(user.role);
       loadNotifications();
     } catch {
       removeAuthToken();
@@ -127,6 +158,7 @@ export const App: React.FC = () => {
       const res = await api.auth.login(username, password);
       setAuthToken(res.access_token);
       setCurrentUser(res.user);
+      syncDefaultTab(res.user.role);
       showToast(`Authenticated as ${res.user.full_name}`, 'success');
       loadNotifications();
     } catch (err: any) {
@@ -149,6 +181,7 @@ export const App: React.FC = () => {
       });
       setAuthToken(res.access_token);
       setCurrentUser(res.user);
+      syncDefaultTab(res.user.role);
       showToast('Registration successful! Welcome to WriteUp Pro.', 'success');
     } catch (err: any) {
       showToast(err.message || 'Registration failed', 'error');
@@ -165,6 +198,7 @@ export const App: React.FC = () => {
       const res = await api.auth.login(roleName, 'password');
       setAuthToken(res.access_token);
       setCurrentUser(res.user);
+      syncDefaultTab(res.user.role);
       setActiveDocId(undefined);
       showToast(`Authenticated as ${res.user.full_name}`, 'success');
       loadNotifications();
@@ -193,7 +227,7 @@ export const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#FBF9F3] dark:bg-[#14110E] text-[#1A1209] dark:text-[#F7F3E9] font-sans flex flex-col transition-colors duration-200">
+    <div className="min-h-screen bg-[#FBF9F3] dark:bg-[#14110E] text-[#1A1209] dark:text-[#F7F3E9] font-sans flex transition-colors duration-200">
       {/* Toast Notification Container */}
       <div className="fixed top-20 right-6 z-50 flex flex-col gap-2 max-w-sm pointer-events-none">
         {toasts.map((t) => (
@@ -218,37 +252,72 @@ export const App: React.FC = () => {
         ))}
       </div>
 
-      {/* Main Navigation Header */}
-      <header className="sticky top-0 z-40 bg-white/95 dark:bg-[#1D1814]/95 backdrop-blur-sm border-b-2 border-[#1A1209] px-6 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 bg-[#1A1209] text-[#FBF9F3] border-2 border-[#1A1209] shadow-[2.5px_2.5px_0px_#B84915] flex items-center justify-center font-black text-lg select-none">
-            W
+      {/* Collapsible Role-Based Sidebar Navigation */}
+      {currentUser && activeDocId === undefined && (
+        <Sidebar
+          currentUser={currentUser}
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          isOpen={isSidebarOpen}
+          onClose={() => setIsSidebarOpen(false)}
+          isCollapsed={isSidebarCollapsed}
+          onToggleCollapse={toggleSidebarCollapse}
+          onNewAction={
+            currentUser.role === 'student'
+              ? () => setActiveDocId(null)
+              : currentUser.role === 'faculty'
+              ? () => setActiveTab('create_task')
+              : () => setActiveTab('promotions')
+          }
+          onLogout={handleLogout}
+          isDarkMode={isDarkMode}
+          onToggleTheme={toggleDarkMode}
+        />
+      )}
+
+      {/* Main App Content Viewport */}
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Main Navigation Header */}
+        <header className="sticky top-0 z-40 bg-white/95 dark:bg-[#1D1814]/95 backdrop-blur-sm border-b-2 border-[#1A1209] px-3 sm:px-6 py-2.5 sm:py-3 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+            {currentUser && activeDocId === undefined && (
+              <button
+                type="button"
+                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                className="neo-btn p-1.5 sm:p-2 bg-[#F4EFE6] dark:bg-[#26201B] text-[#1A1209] dark:text-[#F7F3E9] md:hidden cursor-pointer"
+                title="Toggle navigation sidebar"
+              >
+                <Menu className="w-4 h-4" />
+              </button>
+            )}
+            <div className="w-8 h-8 sm:w-9 sm:h-9 bg-[#1A1209] text-[#FBF9F3] border-2 border-[#1A1209] shadow-[2.5px_2.5px_0px_#B84915] flex items-center justify-center font-black text-base sm:text-lg select-none shrink-0">
+              W
+            </div>
+            <div className="min-w-0">
+              <h1 className="text-base sm:text-lg font-extrabold tracking-tight text-[#1A1209] dark:text-[#F7F3E9] flex items-center gap-1.5 sm:gap-2 truncate">
+                WriteUp <span className="text-[#B84915] dark:text-[#E0651E]">Pro</span>
+                <span className="stamp-badge py-0 text-[9px] bg-[#F4EFE6] dark:bg-[#26201B] text-[#1A1209] dark:text-[#F7F3E9] hidden xs:inline-block">
+                  Enterprise v2.0
+                </span>
+              </h1>
+              <p className="text-[11px] font-medium text-[#786958] dark:text-[#A89886] hidden md:block">
+                Imperial Institute Academic Writing & Integrity Management
+              </p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-lg font-extrabold tracking-tight text-[#1A1209] dark:text-[#F7F3E9] flex items-center gap-2">
-              WriteUp <span className="text-[#B84915] dark:text-[#E0651E]">Pro</span>
-              <span className="stamp-badge bg-[#F4EFE6] dark:bg-[#26201B] text-[#1A1209] dark:text-[#F7F3E9]">
-                Enterprise v2.0
-              </span>
-            </h1>
-            <p className="text-[11px] font-medium text-[#786958] dark:text-[#A89886] hidden sm:block">
-              Imperial Institute Academic Writing & Integrity Management
-            </p>
-          </div>
-        </div>
 
         {/* Header Right Actions */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
           {currentUser && (
             <>
               {/* Notifications Dropdown */}
               <div className="relative">
                 <button
                   onClick={() => setShowNotifications(!showNotifications)}
-                  className="neo-btn p-2 bg-[#F4EFE6] dark:bg-[#26201B] text-[#1A1209] dark:text-[#F7F3E9] relative"
+                  className="neo-btn p-1.5 sm:p-2 bg-[#F4EFE6] dark:bg-[#26201B] text-[#1A1209] dark:text-[#F7F3E9] relative"
                   title="Notifications"
                 >
-                  <Bell className="w-4 h-4" />
+                  <Bell className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                   {unreadCount > 0 && (
                     <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-[#8B1A1A] border border-[#1A1209] rounded-none" />
                   )}
@@ -292,11 +361,11 @@ export const App: React.FC = () => {
               </div>
 
               {/* User Profile Pill */}
-              <div className="flex items-center gap-2 pl-3 border-l-2 border-[#1A1209]">
-                <div className="w-8 h-8 bg-[#1A365D] text-white font-bold flex items-center justify-center text-xs border border-[#1A1209]">
+              <div className="flex items-center gap-1.5 sm:gap-2 pl-2 sm:pl-3 border-l-2 border-[#1A1209]">
+                <div className="w-7 h-7 sm:w-8 sm:h-8 bg-[#1A365D] text-white font-bold flex items-center justify-center text-xs border border-[#1A1209]">
                   {currentUser.full_name.charAt(0)}
                 </div>
-                <div className="hidden md:block text-left">
+                <div className="hidden lg:block text-left">
                   <p className="text-xs font-bold text-[#1A1209] dark:text-white leading-tight">
                     {currentUser.full_name}
                   </p>
@@ -308,10 +377,10 @@ export const App: React.FC = () => {
 
               <button
                 onClick={handleLogout}
-                className="neo-btn p-2 bg-[#F4EFE6] dark:bg-[#26201B] hover:bg-[#8B1A1A] hover:text-white text-[#1A1209] dark:text-[#F7F3E9] transition-colors"
+                className="neo-btn p-1.5 sm:p-2 bg-[#F4EFE6] dark:bg-[#26201B] hover:bg-[#8B1A1A] hover:text-white text-[#1A1209] dark:text-[#F7F3E9] transition-colors"
                 title="Logout"
               >
-                <LogOut className="w-4 h-4" />
+                <LogOut className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </button>
             </>
           )}
@@ -319,10 +388,20 @@ export const App: React.FC = () => {
           {/* Theme Switcher */}
           <button
             onClick={toggleDarkMode}
-            className="neo-btn p-2 bg-[#F4EFE6] dark:bg-[#26201B] text-[#1A1209] dark:text-[#F7F3E9]"
-            title="Toggle Light/Dark Theme"
+            className="neo-btn px-2.5 py-1.5 bg-[#F4EFE6] dark:bg-[#26201B] text-[#1A1209] dark:text-[#F7F3E9] flex items-center gap-1.5 font-mono text-[11px] font-bold cursor-pointer"
+            title={isDarkMode ? 'Switch to Light Academic Mode' : 'Switch to Dark Mode'}
           >
-            {isDarkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4" />}
+            {isDarkMode ? (
+              <>
+                <Sun className="w-3.5 h-3.5 text-amber-400" />
+                <span className="hidden sm:inline">LIGHT MODE</span>
+              </>
+            ) : (
+              <>
+                <Moon className="w-3.5 h-3.5 text-[#1A1209]" />
+                <span className="hidden sm:inline">DARK MODE</span>
+              </>
+            )}
           </button>
         </div>
       </header>
@@ -501,20 +580,33 @@ export const App: React.FC = () => {
               onOpenEditor={(id) => setActiveDocId(id)}
               showToast={showToast}
               onProfileUpdated={loadCurrentUser}
+              activeTab={activeTab}
+              setActiveTab={setActiveTab}
             />
           </ErrorBoundary>
         ) : currentUser.role === 'faculty' ? (
           /* Faculty Workspace */
           <ErrorBoundary fallbackTitle="Faculty Evaluation Desk">
-            <FacultyWorkspace currentUser={currentUser} showToast={showToast} />
+            <FacultyWorkspace
+              currentUser={currentUser}
+              showToast={showToast}
+              activeTab={activeTab}
+              setActiveTab={setActiveTab}
+            />
           </ErrorBoundary>
         ) : (
           /* Administrator Control Center */
           <ErrorBoundary fallbackTitle="Administrator Control Center">
-            <AdminWorkspace currentUser={currentUser} showToast={showToast} />
+            <AdminWorkspace
+              currentUser={currentUser}
+              showToast={showToast}
+              activeTab={activeTab}
+              setActiveTab={setActiveTab}
+            />
           </ErrorBoundary>
         )}
       </main>
+      </div>
     </div>
   );
 };
